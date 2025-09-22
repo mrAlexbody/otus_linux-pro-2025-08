@@ -15,7 +15,9 @@
 ###⭐️Задание со звездочкой:
 + Собрать ядро самостоятельно из исходных кодов.
 ---
-
+### Обноление ядра Linux из исходных кодов
+Запускаем ВМ Ubuntu 24.04 LTS с версией ядра 6.8.0-79-generic
+````shell
  * Documentation:  https://help.ubuntu.com
  * Management:     https://landscape.canonical.com
  * Support:        https://ubuntu.com/pro
@@ -27,29 +29,15 @@
   Memory usage: 52%                IPv4 address for eth0: 192.168.77.12
   Swap usage:   0%
 
-
-Расширенное поддержание безопасности (ESM) для Applications выключено.
-
-0 обновлений может быть применено немедленно.
-
-Включите ESM Apps для получения дополнительных будущих обновлений безопасности.
-Смотрите https://ubuntu.com/esm или выполните: sudo pro status
-
-
-1 updates could not be installed automatically. For more details,
-see /var/log/unattended-upgrades/unattended-upgrades.log
-
-Last login: Wed Sep 10 20:08:07 2025 from 192.168.77.5
-amyskin@linux:~$ sudo -i
-[sudo] password for amyskin:
-
-root@linux:~# cd ~
-
 root@linux:~# uname -r
 6.8.0-79-generic
-
+````
+Установил нужные пакеты для сборки ядра
+````shell
 root@linux:~# apt-get install wget curl make build-essential libncurses-dev flex bison libssl-dev libelf-dev
-
+````
+Скачал на сервер исходники "ванильное ядро" версии 6.16.6
+````shell
 root@linux:~# wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.16.6.tar.xz
 --2025-09-10 20:13:02--  https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.16.6.tar.xz
 Resolving cdn.kernel.org (cdn.kernel.org)... 151.101.1.176, 151.101.65.176, 151.101.129.176, ...
@@ -57,28 +45,31 @@ Connecting to cdn.kernel.org (cdn.kernel.org)|151.101.1.176|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 152654392 (146M) [application/x-xz]
 Saving to: ‘linux-6.16.6.tar.xz.1’
-
 linux-6.16.6.tar.xz.1                100%[======================================================================>] 145,58M  22,0MB/s    in 6,4s
-
 2025-09-10 20:13:09 (22,8 MB/s) - ‘linux-6.16.6.tar.xz.1’ saved [152654392/152654392]
 
 root@linux:~# tar xf ./linux-6.16.6.tar.xz
 
 root@linux:~# ls
-
 linux-6.16.6  linux-6.16.6.tar.xz  linux-6.16.6.tar.xz.1
-
+````
+Переместим исходники в правильное место
+```shell
 root@linux:~# mv ./linux-6.16.6 /usr/src/
-
 root@linux:~# ls /usr/src/
 linux-6.16.6  linux-headers-6.8.0-79  linux-headers-6.8.0-79-generic
-
+```
+Скопируем конфигурцию сборки ядра из текужей версии
+```shell
 root@linux:~# cd /usr/src/linux-6.16.6/
-
 root@linux:/usr/src/linux-6.16.6# ls
 arch   certs    CREDITS  Documentation  fs       init      ipc     Kconfig  lib       MAINTAINERS  mm   README  samples  security  tools  virt
 block  COPYING  crypto   drivers        include  io_uring  Kbuild  kernel   LICENSES  Makefile     net  rust    scripts  sound     usr
 root@linux:/usr/src/linux-6.16.6# cp /boot/config-$(uname -r) .config
+```
+Запускаем команду, которая берет существующий файл конфигурации (.config) и адаптирует его к новой версии исходного кода, где
+автоматически присваивает значения по умолчанию всем новым параметрам, появившимся в этой новой версии
+```shell
 root@linux:/usr/src/linux-6.16.6# make olddefconfig
   HOSTCC  scripts/basic/fixdep
   HOSTCC  scripts/kconfig/conf.o
@@ -103,17 +94,10 @@ root@linux:/usr/src/linux-6.16.6# make olddefconfig
 #
 # configuration written to .config
 #
-
-root@linux:/usr/src/linux-6.16.6# df -h
-Filesystem                         Size  Used Avail Use% Mounted on
-tmpfs                              392M  1,1M  391M   1% /run
-/dev/mapper/ubuntu--vg-ubuntu--lv   58G  6,6G   49G  13% /
-tmpfs                              2,0G     0  2,0G   0% /dev/shm
-tmpfs                              5,0M     0  5,0M   0% /run/lock
-/dev/sda2                          1,8G  100M  1,6G   7% /boot
-tmpfs                              392M   12K  392M   1% /run/user/1000
-
-
+... и т.д.
+```
+Запустил параллельной сборку ядра
+```shell
 root@linux:/usr/src/linux-6.16.6# make -j$(nproc)
   WRAP    arch/x86/include/generated/uapi/asm/bpf_perf_event.h
   WRAP    arch/x86/include/generated/uapi/asm/errno.h
@@ -174,9 +158,11 @@ root@linux:/usr/src/linux-6.16.6# make -j$(nproc)
   INSTALL /usr/src/linux-6.16.6/tools/objtool/libsubcmd/include/subcmd/run-command.h
   INSTALL libsubcmd_headers
   HOSTLD  arch/x86/tools/relocs
-....
-....
-....
+  .... и т.д.
+```
+Ошибка сборки
+```shell
+...
   CC [M]  fs/bcachefs/varint.o
   CC [M]  fs/xfs/xfs_notify_failure.o
   CC [M]  fs/bcachefs/xattr.o
@@ -184,7 +170,10 @@ root@linux:/usr/src/linux-6.16.6# make -j$(nproc)
   LD [M]  fs/bcachefs/bcachefs.o
 make[1]: *** [/usr/src/linux-6.16.6/Makefile:2003: .] Error 2
 make: *** [Makefile:248: __sub-make] Error 2
-
+... и т.д.
+```
+Поиск ошибки 
+```shell
 root@linux:/usr/src/linux-6.16.6# df -h
 Filesystem                         Size  Used Avail Use% Mounted on
 tmpfs                              392M  1,1M  391M   1% /run
@@ -246,35 +235,10 @@ root@linux:/usr/src/linux-6.16.6# free --mega
                total        used        free      shared  buff/cache   available
 Mem:             649         489         135           3         295         160
 Swap:           2038          49        1989
-root@linux:/usr/src/linux-6.16.6# shutdown -h now
-Виртуалки не хватило памяти, накинул до 8 ГБ
-Перезагрузился 
+```
+Виртуалки не хватило памяти, накинул до 8 ГБ и запустил всё заново через очистку (cleanup) собранных файлов.
 
----
-Last login: Wed Sep 10 20:12:14 2025 from 192.168.77.5
-amyskin@linux:~$ sudo -i
-[sudo] password for amyskin:
-
-root@linux:~# cd /usr/src/linux-6.16.6/
-
-root@linux:/usr/src/linux-6.16.6# ls
-arch   COPYING  Documentation  include   ipc      kernel    MAINTAINERS  net     samples   sound  virt
-block  CREDITS  drivers        init      Kbuild   lib       Makefile     README  scripts   tools  vmlinux-gdb.py
-certs  crypto   fs             io_uring  Kconfig  LICENSES  mm           rust    security  usr
-
-root@linux:/usr/src/linux-6.16.6# make -j$(nproc)
-  DESCEND objtool
-  INSTALL libsubcmd_headers
-  CALL    scripts/checksyscalls.sh
-...
-...
-...
-  LD [M]  drivers/comedi/drivers/ni_routing.o
-  LD [M]  drivers/iio/pressure/bmp280.o
-  LD [M]  drivers/iio/pressure/st_pressure.o
-make[1]: *** [/usr/src/linux-6.16.6/Makefile:2003: .] Error 2
-make: *** [Makefile:248: __sub-make] Error 2
-
+```shell
 root@linux:/usr/src/linux-6.16.6# make clean
   CLEAN   arch/x86/entry/vdso
   CLEAN   arch/x86/kernel/cpu
@@ -307,26 +271,12 @@ root@linux:/usr/src/linux-6.16.6# make clean
   CLEAN   security/tomoyo
   CLEAN   usr
   CLEAN   .
-root@linux:/usr/src/linux-6.16.6# make disrclean
-make[1]: *** No rule to make target 'disrclean'.  Stop.
-make: *** [Makefile:248: __sub-make] Error 2
-
-root@linux:/usr/src/linux-6.16.6# make distclean
-  CLEAN   scripts/basic
-  CLEAN   scripts/gdb/linux
-  CLEAN   scripts/genksyms
-  CLEAN   scripts/kconfig
-  CLEAN   scripts/mod
-  CLEAN   scripts/selinux/mdp
-  CLEAN   scripts
-  CLEAN   include/config include/generated arch/x86/include/generated .config .config.old vmlinux-gdb.py
-
-root@linux:/usr/src/linux-6.16.6# make mrproper
-  CLEAN   scripts/basic
-
-root@linux:/usr/src/linux-6.16.6# make menuconfig
-  HOSTCC  scripts/basic/fixdep
-  HOSTCC  scripts/kconfig/mconf.o
+```
+Запуск сборки ядра
+```shell
+root@linux:/usr/src/linux-6.16.6# make -j$(nproc)
+...
+ HOSTCC  scripts/kconfig/mconf.o
   HOSTCC  scripts/kconfig/lxdialog/checklist.o
   HOSTCC  scripts/kconfig/lxdialog/inputbox.o
   HOSTCC  scripts/kconfig/lxdialog/menubox.o
@@ -345,57 +295,10 @@ root@linux:/usr/src/linux-6.16.6# make menuconfig
   HOSTCC  scripts/kconfig/symbol.o
   HOSTCC  scripts/kconfig/util.o
   HOSTLD  scripts/kconfig/mconf
-...
-...
-...  
-
-root@linux:/usr/src/linux-6.16.6# make
-  SYSHDR  arch/x86/include/generated/uapi/asm/unistd_32.h
-  SYSHDR  arch/x86/include/generated/uapi/asm/unistd_64.h
-  SYSHDR  arch/x86/include/generated/uapi/asm/unistd_x32.h
-  SYSTBL  arch/x86/include/generated/asm/syscalls_32.h
-  SYSHDR  arch/x86/include/generated/asm/unistd_32_ia32.h
-  SYSHDR  arch/x86/include/generated/asm/unistd_64_x32.h
-  SYSTBL  arch/x86/include/generated/asm/syscalls_64.h
-  HYPERCALLS arch/x86/include/generated/asm/xen-hypercalls.h
-  HOSTCC  arch/x86/tools/relocs_32.o
-...
-...
-...
-
-root@linux:/usr/src/linux-6.16.6# make modules_install
-  INSTALL /lib/modules/6.16.6/modules.order
-  INSTALL /lib/modules/6.16.6/modules.builtin
-  INSTALL /lib/modules/6.16.6/modules.builtin.modinfo
-  SYMLINK /lib/modules/6.16.6/build
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/events/amd/amd-uncore.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/events/intel/intel-cstate.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/events/rapl.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/kernel/cpu/mce/mce-inject.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/kernel/msr.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/kernel/cpuid.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/twofish-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/twofish-x86_64-3way.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/twofish-avx-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/serpent-sse2-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/serpent-avx-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/serpent-avx2.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/des3_ede-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/camellia-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/camellia-aesni-avx-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/camellia-aesni-avx2.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/blowfish-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/cast5-avx-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/cast6-avx-x86_64.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/aegis128-aesni.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/aesni-intel.ko
-  INSTALL /lib/modules/6.16.6/kernel/arch/x86/crypto/sha1-ssse3.ko
-...
-...
-...
-  INSTALL /lib/modules/6.16.6/kernel/net/qrtr/qrtr-mhi.ko
-  INSTALL /lib/modules/6.16.6/kernel/virt/lib/irqbypass.ko
-  DEPMOD  /lib/modules/6.16.6
+... и т.д.
+````
+Теперь устанавливаем собранное ядро в систему, с обновлением конфигурации загрузчика и созданием initramfs
+```shell
 root@linux:/usr/src/linux-6.16.6# make install
   INSTALL /boot
 run-parts: executing /etc/kernel/postinst.d/initramfs-tools 6.16.6 /boot/vmlinuz-6.16.6
@@ -416,6 +319,10 @@ Systems on them will not be added to the GRUB boot configuration.
 Check GRUB_DISABLE_OS_PROBER documentation entry.
 Adding boot menu entry for UEFI Firmware Settings ...
 done
+...и т.д.
+```
+Перезагрузил ВМ  и проверил версию ядра
+```shell
 root@linux:/usr/src/linux-6.16.6# uname -r
 6.8.0-79-generic
 
@@ -431,31 +338,30 @@ Systems on them will not be added to the GRUB boot configuration.
 Check GRUB_DISABLE_OS_PROBER documentation entry.
 Adding boot menu entry for UEFI Firmware Settings ...
 done
-
----
+```
+```shell
 root@linux:/usr/src/linux-6.16.6# ls -la /boot/vmlinuz-* /boot/initrd.img-*
 -rw-r--r-- 1 root root 597241367 сен 11 06:56 /boot/initrd.img-6.16.6
 -rw-r--r-- 1 root root  72478863 сен 10 20:03 /boot/initrd.img-6.8.0-79-generic
 -rw-r--r-- 1 root root  13918720 сен 11 06:56 /boot/vmlinuz-6.16.6
 -rw------- 1 root root  15014280 авг 12 10:35 /boot/vmlinuz-6.8.0-79-generic
 
----
+````
+```shell
 root@linux:/usr/src/linux-6.16.6# reboot
+Broadcast message from root@linux on pts/3 (Thu 2025-09-11 07:22:48 UTC):
+The system will reboot now!
 
 Broadcast message from root@linux on pts/3 (Thu 2025-09-11 07:22:48 UTC):
 
 The system will reboot now!
-
-
-Broadcast message from root@linux on pts/3 (Thu 2025-09-11 07:22:48 UTC):
-
-The system will reboot now!
-
----
-После перезагрузки
+````
+После перезагрузки проверяем
+```shell
 root@linux:~# uname -r
 6.16.6
-
+```
+```shell
 root@linux:~# grep -A 10 -B 2 "6.16.6" /boot/grub/grub.cfg
           search --no-floppy --fs-uuid --set=root bad47e9c-3ab0-471b-8ab0-83d353c77c2b
         fi
@@ -509,5 +415,5 @@ submenu 'Advanced options for Ubuntu' $menuentry_id_option 'gnulinux-advanced-79
                 insmod part_gpt
                 insmod ext2
                 set root='hd0,gpt2'
-
----
+```
+Всё ок, ВМ обновлена на новое ядро!!!
