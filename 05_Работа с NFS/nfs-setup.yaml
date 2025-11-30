@@ -1,0 +1,66 @@
+---
+- name: Setup NFS Server and Client
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install NFS packages on server
+      apt:
+        name: 
+          - nfs-kernel-server
+        state: present
+      when: inventory_hostname == "nfs-server"
+
+    - name: Install NFS client packages
+      apt:
+        name: 
+          - nfs-common
+        state: present
+      when: inventory_hostname == "nfs-client"
+
+    - name: Create export directory on server
+      file:
+        path: /export/data
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: inventory_hostname == "nfs-server"
+
+    - name: Configure NFS export
+      lineinfile:
+        path: /etc/exports
+        line: "/export/data 172.31.140.41(rw,sync,no_subtree_check)"
+        state: present
+      when: inventory_hostname == "nfs-server"
+      notify: restart nfs
+
+    - name: Start NFS server
+      service:
+        name: nfs-server
+        state: started
+        enabled: yes
+      when: inventory_hostname == "nfs-server"
+
+    - name: Create mount directory on client
+      file:
+        path: /mnt/nfs-data
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: inventory_hostname == "nfs-client"
+
+    - name: Mount NFS share on client
+      mount:
+        path: /mnt/nfs-data
+        src: "172.31.134.60:/export/data"
+        fstype: nfs
+        opts: "defaults"
+        state: mounted
+      when: inventory_hostname == "nfs-client"
+
+  handlers:
+    - name: restart nfs
+      service:
+        name: nfs-server
+        state: restarted
