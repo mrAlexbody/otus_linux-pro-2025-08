@@ -54,6 +54,7 @@ Broadcast message from root@otus-boot on pts/1 (Sun 2025-12-14 16:27:10 UTC):
 The system will reboot now!
 ```
 > Загрузка ОС Linux, зафиксировал сам GRUB
+
 ![img.png](img.png)
 
 > Далее жмём "е" и попадаем в редактор загрузки 
