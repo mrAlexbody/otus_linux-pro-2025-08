@@ -137,6 +137,7 @@ root@otus-systemd:/# tail -n 1000 /var/log/syslog  | grep word
 2025-12-14T18:04:51.418972+00:00 otus-systemd kernel: audit: type=1400 audit(1765735053.384:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="1password" pid=571 comm="apparmor_parser"
 ```
 ### Установить spawn-fcgi и создать unit-файл (spawn-fcgi.sevice) с помощью переделки init-скрипта
++ **spawn-fcgi** — это утилита для запуска FastCGI-приложений в качестве демонов (фоновых процессов). Она является частью проекта lighttpd (легковесного веб-сервера), но может использоваться независимо с другими веб-серверами (Nginx, Apache и т.д.).
 > Для выполнения данной задачи, нужно установить некоторые пакеты:
 ```shell
 root@otus-systemd:/# apt install spawn-fcgi php php-cgi php-cli apache2 libapache2-mod-fcgid -y
@@ -167,4 +168,209 @@ Get:9 http://ru.archive.ubuntu.com/ubuntu noble-updates/main amd64 apache2 amd64
 Get:10 http://ru.archive.ubuntu.com/ubuntu noble/universe amd64 libapache2-mod-fcgid amd64 1:2.3.9-4 [64.9 kB]
 Get:11 http://ru.archive.ubuntu.com/ubuntu noble/main amd64 php-common all 2:93ubuntu2 [13.9 kB]
 ...
+```
++ Скачал скрипт от сюда: <https://gist.github.com/cea2k/1318020>
+
+> Скачаал файл
+```shell
+root@otus-systemd:~# wget https://gist.github.com/cea2k/1318020/archive/6563444afbaa82c75019023162afce3368f02f29.zip
+--2025-12-15 21:53:24--  https://gist.github.com/cea2k/1318020/archive/6563444afbaa82c75019023162afce3368f02f29.zip
+Resolving gist.github.com (gist.github.com)... 4.225.11.194
+Connecting to gist.github.com (gist.github.com)|4.225.11.194|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://codeload.github.com/gist/1318020/zip/6563444afbaa82c75019023162afce3368f02f29 [following]
+--2025-12-15 21:53:24--  https://codeload.github.com/gist/1318020/zip/6563444afbaa82c75019023162afce3368f02f29
+Resolving codeload.github.com (codeload.github.com)... 4.225.11.198
+Connecting to codeload.github.com (codeload.github.com)|4.225.11.198|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1206 (1.2K) [application/zip]
+Saving to: ‘6563444afbaa82c75019023162afce3368f02f29.zip’
+
+6563444afbaa82c75019023162afce3368 100%[=============================================================>]   1.18K  --.-KB/s    in 0s
+
+2025-12-15 21:53:25 (17.8 MB/s) - ‘6563444afbaa82c75019023162afce3368f02f29.zip’ saved [1206/1206]
+
+
+
+root@otus-systemd:~# ls -la ./php_cgi
+-rw-r--r-- 1 root root 1629 Oct 26  2011 ./php_cgi
+
+```
+> Cоздал файл /etc/spawn-fcgi/fcgi.conf
+```shell
+root@otus-systemd:~# cat /etc/spawn-fcgi/fcgi.conf
+# You must set some working options before the "spawn-fcgi" service will work.
+# If SOCKET points to a file, then this file is cleaned up by the init script.
+#
+# See spawn-fcgi(1) for all possible options.
+#
+# Example :
+SOCKET=/var/run/php-fcgi.sock
+OPTIONS="-u www-data -g www-data -s $SOCKET -S -M 0600 -C 32 -F 1 -- /usr/bin/php-cgi"
+
+```
+> Далее создал юнит-файл
+```shell
+root@otus-systemd:~# cat /etc/systemd/system/spawn-fcgi.service
+[Unit]
+Description=Spawn-fcgi startup service by Otus
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/spawn-fcgi.pid
+EnvironmentFile=/etc/spawn-fcgi/fcgi.conf
+ExecStart=/usr/bin/spawn-fcgi -n $OPTIONS
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+
+```
+> Проверил запуск
+```shell
+root@otus-systemd:~# systemctl start spawn-fcgi
+root@otus-systemd:~# systemctl status spawn-fcgi
+● spawn-fcgi.service - Spawn-fcgi startup service by Otus
+     Loaded: loaded (/etc/systemd/system/spawn-fcgi.service; disabled; preset: enabled)
+     Active: active (running) since Mon 2025-12-15 22:02:11 UTC; 4s ago
+   Main PID: 11338 (php-cgi)
+      Tasks: 33 (limit: 4605)
+     Memory: 14.5M (peak: 14.8M)
+        CPU: 97ms
+     CGroup: /system.slice/spawn-fcgi.service
+             ├─11338 /usr/bin/php-cgi
+             ├─11345 /usr/bin/php-cgi
+             ├─11346 /usr/bin/php-cgi
+             ├─11347 /usr/bin/php-cgi
+             ├─11349 /usr/bin/php-cgi
+             ├─11350 /usr/bin/php-cgi
+             ├─11351 /usr/bin/php-cgi
+             ├─11352 /usr/bin/php-cgi
+             ├─11353 /usr/bin/php-cgi
+             ├─11354 /usr/bin/php-cgi
+             ├─11355 /usr/bin/php-cgi
+             ├─11356 /usr/bin/php-cgi
+             ├─11358 /usr/bin/php-cgi
+             ├─11359 /usr/bin/php-cgi
+             ├─11360 /usr/bin/php-cgi
+             ├─11362 /usr/bin/php-cgi
+             ├─11363 /usr/bin/php-cgi
+             ├─11365 /usr/bin/php-cgi
+             ├─11367 /usr/bin/php-cgi
+             ├─11368 /usr/bin/php-cgi
+             ├─11370 /usr/bin/php-cgi
+             ├─11372 /usr/bin/php-cgi
+             ├─11374 /usr/bin/php-cgi
+             ├─11375 /usr/bin/php-cgi
+             ├─11377 /usr/bin/php-cgi
+             ├─11380 /usr/bin/php-cgi
+             ├─11381 /usr/bin/php-cgi
+             ├─11382 /usr/bin/php-cgi
+             ├─11383 /usr/bin/php-cgi
+             ├─11385 /usr/bin/php-cgi
+             ├─11386 /usr/bin/php-cgi
+             ├─11387 /usr/bin/php-cgi
+             └─11388 /usr/bin/php-cgi
+
+Dec 15 22:02:11 otus-systemd systemd[1]: Started spawn-fcgi.service - Spawn-fcgi startup service by Otus.
+
+```
+### Доработать unit-файл Nginx (nginx.service) для запуска нескольких инстансов сервера с разными конфигурационными файлами одновременно
+> Установил NGINX
+```shell
+root@otus-systemd:~# apt install nginx -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  nginx-common
+Suggested packages:
+  fcgiwrap nginx-doc
+The following NEW packages will be installed:
+  nginx nginx-common
+0 upgraded, 2 newly installed, 0 to remove and 170 not upgraded.
+Need to get 564 kB of archives.
+After this operation, 1,596 kB of additional disk space will be used.
+Get:1 http://ru.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx-common all 1.24.0-2ubuntu7.5 [43.4 kB]
+Get:2 http://ru.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx amd64 1.24.0-2ubuntu7.5 [520 kB]
+Fetched 564 kB in 0s (2,966 kB/s)
+Preconfiguring packages ...
+Selecting previously unselected package nginx-common.
+(Reading database ... 85811 files and directories currently installed.)
+Preparing to unpack .../nginx-common_1.24.0-2ubuntu7.5_all.deb ...
+Unpacking nginx-common (1.24.0-2ubuntu7.5) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../nginx_1.24.0-2ubuntu7.5_amd64.deb ...
+Unpacking nginx (1.24.0-2ubuntu7.5) ...
+Setting up nginx-common (1.24.0-2ubuntu7.5) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr/lib/systemd/system/nginx.service.
+Could not execute systemctl:  at /usr/bin/deb-systemd-invoke line 148.
+Setting up nginx (1.24.0-2ubuntu7.5) ...
+Not attempting to start NGINX, port 80 is already in use.
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for ufw (0.36.2-6) ...
+Scanning processes...
+Scanning candidates...
+Scanning linux images...
+
+Running kernel seems to be up-to-date.
+
+Restarting services...
+
+Service restarts being deferred:
+ systemctl restart unattended-upgrades.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+
+```
+> Создал новый Unit для работы с шаблонами (/etc/systemd/system/nginx@.service)
+```shell
+root@otus-systemd:~# cat /etc/systemd/system/nginx@.service
+# Stop dance for nginx
+# =======================
+#
+# ExecStop sends SIGSTOP (graceful stop) to the nginx process.
+# If, after 5s (--retry QUIT/5) nginx is still running, systemd takes control
+# and sends SIGTERM (fast shutdown) to the main process.
+# After another 5s (TimeoutStopSec=5), and if nginx is alive, systemd sends
+# SIGKILL to all the remaining processes in the process group (KillMode=mixed).
+#
+# nginx signals reference doc:
+# http://nginx.org/en/docs/control.html
+#
+[Unit]
+Description=A high performance web server and a reverse proxy server
+Documentation=man:nginx(8)
+After=network.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx-%I.pid
+ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-%I.conf -q -g 'daemon on; master_process on;'
+ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;'
+ExecReload=/usr/sbin/nginx -c /etc/nginx/nginx-%I.conf -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx-%I.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+
+```
+> Создание базовых конфигурационных файлов
+```shell
+# Создал копию оригинального конфига для первого nginx
+root@otus-systemd:~# cp /etc/nginx/nginx.conf /etc/nginx/nginx-first.conf
+
+# Создал копию для второго nginx
+root@otus-systemd:~# cp /etc/nginx/nginx.conf /etc/nginx/nginx-second.conf
+```
+> Отредактировал первый файл _/etc/nginx/nginx-first.conf_
+```shell
+
 ```
