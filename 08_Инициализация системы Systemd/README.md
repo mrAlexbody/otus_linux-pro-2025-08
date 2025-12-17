@@ -372,5 +372,165 @@ root@otus-systemd:~# cp /etc/nginx/nginx.conf /etc/nginx/nginx-second.conf
 ```
 > Отредактировал первый файл _/etc/nginx/nginx-first.conf_
 ```shell
+user www-data;
+worker_processes auto;
+pid /run/nginx-first.pid;
+error_log /var/log/nginx/error.log;
+
+events {
+        worker_connections 768;
+}
+
+http {
+        sendfile on;
+        tcp_nopush on;
+        types_hash_max_size 2048;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        ssl_prefer_server_ciphers on;
+        access_log /var/log/nginx/access.log;
+        gzip on;
+
+     server {
+        listen 9001;
+        server_name localhost;
+        location / {
+            root /var/www/html-first;
+            index index.html index.htm;
+        }
+     }
+}
+
+```
+> > Отредактировал первый файл _/etc/nginx/nginx-second.conf
+```shell
+user www-data;
+worker_processes auto;
+pid /run/nginx-second.pid;
+error_log /var/log/nginx/error.log;
+
+events {
+        worker_connections 768;
+}
+http {
+        sendfile on;
+        tcp_nopush on;
+        types_hash_max_size 2048;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        ssl_prefer_server_ciphers on;
+        access_log /var/log/nginx/access.log;
+        gzip on;
+     server {
+        listen 9002;
+        server_name localhost;
+        location / {
+            root /var/www/html-first;
+            index index.html index.htm;
+        }
+     }
+}
+
+```
+> Создание директорий для сайтов
+```shell
+
+root@otus-systemd:~# mkdir -p /var/www/html-first
+root@otus-systemd:~# mkdir -p /var/www/html-second
+
+root@otus-systemd:~# echo "<h1>Nginx First on port 9001</h1>" | tee /var/www/html-first/index.html
+root@otus-systemd:~# echo "<h1>Nginx Second on port 9002</h1>" | tee /var/www/html-second/index.html
+
+```
+> Проверим как всё работает =)
+```shell
+root@otus-systemd:~# nginx -t -c /etc/nginx/nginx-first.conf
+nginx: the configuration file /etc/nginx/nginx-first.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx-first.conf test is successful
+root@otus-systemd:~# nginx -t -c /etc/nginx/nginx-second.conf
+nginx: the configuration file /etc/nginx/nginx-second.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx-second.conf test is successful
+```
+>> Запуск
+```shell
+root@otus-systemd:~# systemctl start nginx@first
+root@otus-systemd:~# systemctl start nginx@second
+```
+```shell
+root@otus-systemd:~# systemctl status nginx@first
+● nginx@first.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/etc/systemd/system/nginx@.service; disabled; preset: enabled)
+     Active: active (running) since Wed 2025-12-17 21:14:43 UTC; 15s ago
+       Docs: man:nginx(8)
+    Process: 1395 ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-first.conf -q -g daemon on; master_process on; (code=exi>
+    Process: 1396 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on; (code=exited, stat>
+   Main PID: 1398 (nginx)
+      Tasks: 5 (limit: 4605)
+     Memory: 3.6M (peak: 4.0M)
+        CPU: 28ms
+     CGroup: /system.slice/system-nginx.slice/nginx@first.service
+             ├─1398 "nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on;"
+             ├─1399 "nginx: worker process"
+             ├─1400 "nginx: worker process"
+             ├─1401 "nginx: worker process"
+             └─1402 "nginx: worker process"
+
+Dec 17 21:14:43 otus-systemd systemd[1]: Starting nginx@first.service - A high performance web server and a reverse proxy serv>
+Dec 17 21:14:43 otus-systemd systemd[1]: Started nginx@first.service - A high performance web server and a reverse proxy serve>
+...skipping...
+● nginx@first.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/etc/systemd/system/nginx@.service; disabled; preset: enabled)
+     Active: active (running) since Wed 2025-12-17 21:14:43 UTC; 15s ago
+       Docs: man:nginx(8)
+    Process: 1395 ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-first.conf -q -g daemon on; master_process on; (code=exi>
+    Process: 1396 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on; (code=exited, stat>
+   Main PID: 1398 (nginx)
+      Tasks: 5 (limit: 4605)
+     Memory: 3.6M (peak: 4.0M)
+        CPU: 28ms
+     CGroup: /system.slice/system-nginx.slice/nginx@first.service
+             ├─1398 "nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-first.conf -g daemon on; master_process on;"
+             ├─1399 "nginx: worker process"
+             ├─1400 "nginx: worker process"
+             ├─1401 "nginx: worker process"
+             └─1402 "nginx: worker process"
+
+Dec 17 21:14:43 otus-systemd systemd[1]: Starting nginx@first.service - A high performance web server and a reverse proxy serv>
+Dec 17 21:14:43 otus-systemd systemd[1]: Started nginx@first.service - A high performance web server and a reverse proxy serve>
+```
+```shell
+root@otus-systemd:~# systemctl status nginx@second
+● nginx@second.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/etc/systemd/system/nginx@.service; disabled; preset: enabled)
+     Active: active (running) since Wed 2025-12-17 21:14:50 UTC; 1min 23s ago
+       Docs: man:nginx(8)
+    Process: 1406 ExecStartPre=/usr/sbin/nginx -t -c /etc/nginx/nginx-second.conf -q -g daemon on; master_process on; (code=ex>
+    Process: 1408 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx-second.conf -g daemon on; master_process on; (code=exited, sta>
+   Main PID: 1409 (nginx)
+      Tasks: 5 (limit: 4605)
+     Memory: 3.6M (peak: 4.2M)
+        CPU: 27ms
+     CGroup: /system.slice/system-nginx.slice/nginx@second.service
+             ├─1409 "nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx-second.conf -g daemon on; master_process on;"
+             ├─1410 "nginx: worker process"
+             ├─1411 "nginx: worker process"
+             ├─1412 "nginx: worker process"
+             └─1413 "nginx: worker process"
+
+Dec 17 21:14:50 otus-systemd systemd[1]: Starting nginx@second.service - A high performance web server and a reverse proxy ser>
+Dec 17 21:14:50 otus-systemd systemd[1]: Started nginx@second.service - A high performance web server and a reverse proxy serv>
+```
+>> CURL
+
+```shell
+root@otus-systemd:~# curl http://localhost:9001
+<h1>Nginx First on port 9001</h1>
+root@otus-systemd:~# curl http://localhost:9002
+<h1>Nginx Second on port 9002</h1>
+```
+>> Порты
+```shell
+tcp   LISTEN 0      511                 0.0.0.0:9002      0.0.0.0:*    users:(("nginx",pid=1465,fd=5),("nginx",pid=1464,fd=5),("nginx",pid=1463,fd=5),("nginx",pid=1462,fd=5),("nginx",pid=1461,fd=5))
+tcp   LISTEN 0      511                 0.0.0.0:9001      0.0.0.0:*    users:(("nginx",pid=1402,fd=5),("nginx",pid=1401,fd=5),("nginx",pid=1400,fd=5),("nginx",pid=1399,fd=5),("nginx",pid=1398,fd=5))
 
 ```
