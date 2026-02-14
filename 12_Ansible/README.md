@@ -291,4 +291,5 @@ Commercial support is available at
 </html>
 
 ````
+![img.png](img.png)
 ---
