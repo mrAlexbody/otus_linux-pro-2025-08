@@ -431,4 +431,234 @@ Enforcing
 ```
 > В логах есть блокировка порта 4881. 
 
-Далее, скопировал 
+Далее, скопировал время которое было записано в логе, и с помощью утилиты audit2why посмотрел, почему блокируется трафик:
+```shell
+[root@selinux ~]# grep 1771073973.165:787 /var/log/audit/audit.log | audit2why
+type=AVC msg=audit(1771073973.165:787): avc:  denied  { name_bind } for  pid=7548 comm="nginx" src=4881 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:unreserved_port_t:s0 tclass=tcp_socket permissive=0
+
+        Was caused by:
+        The boolean nis_enabled was set incorrectly.
+        Description:
+        Allow nis to enabled
+
+        Allow access by executing:
+        # setsebool -P nis_enabled 1
+```
+Сделал вывод, что нужно поменять параметр nis_enabled. Далее выключил nis_enabled и перезапустил nginx.
+```shell
+[root@selinux ~]# setsebool -P nis_enabled on
+[root@selinux ~]# systemctl restart nginx
+[root@selinux ~]# systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; preset: disabled)
+     Active: active (running) since Sat 2026-02-14 13:44:01 UTC; 6s ago
+    Process: 3229 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 3230 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 3231 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 3233 (nginx)
+      Tasks: 3 (limit: 12026)
+     Memory: 2.9M
+        CPU: 28ms
+     CGroup: /system.slice/nginx.service
+             ├─3233 "nginx: master process /usr/sbin/nginx"
+             ├─3234 "nginx: worker process"
+             └─3235 "nginx: worker process"
+
+Feb 14 13:44:01 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 13:44:01 selinux nginx[3230]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 13:44:01 selinux nginx[3230]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Feb 14 13:44:01 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+```
+Потом проверил работу NGINX из браузера: 
+
+![img_2.png](img_2.png)
+
+Проверил статус параметра с помощью команды getsebool -a | grep nis_enabled:
+```shell
+[root@selinux ~]# getsebool -a | grep nis_enabled
+nis_enabled --> on
+
+```
+Запретил работу NGINX на порту 4881 
+```shell
+[root@selinux ~]# setsebool -P nis_enabled off
+[root@selinux ~]# getsebool -a | grep nis_enabled
+nis_enabled --> off
+```
+Служба NGINX не запустилась:
+```shell
+[root@selinux ~]# systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: active (running) since Sat 2026-02-14 13:44:01 UTC; 9min ago
+   Main PID: 3233 (nginx)
+      Tasks: 3 (limit: 12026)
+     Memory: 3.0M
+        CPU: 32ms
+     CGroup: /system.slice/nginx.service
+             ├─3233 "nginx: master process /usr/sbin/nginx"
+             ├─3234 "nginx: worker process"
+             └─3235 "nginx: worker process"
+
+Feb 14 13:44:01 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 13:44:01 selinux nginx[3230]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 13:44:01 selinux nginx[3230]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Feb 14 13:44:01 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+
+[root@selinux ~]# systemctl status nginx.service
+× nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: failed (Result: exit-code) since Sat 2026-02-14 13:53:25 UTC; 7s ago
+   Duration: 9min 23.237s
+    Process: 3293 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 3295 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)
+        CPU: 15ms
+
+Feb 14 13:53:25 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 13:53:25 selinux nginx[3295]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 13:53:25 selinux nginx[3295]: nginx: [emerg] bind() to 0.0.0.0:4881 failed (13: Permission denied)
+Feb 14 13:53:25 selinux nginx[3295]: nginx: configuration file /etc/nginx/nginx.conf test failed
+Feb 14 13:53:25 selinux systemd[1]: nginx.service: Control process exited, code=exited, status=1/FAILURE
+Feb 14 13:53:25 selinux systemd[1]: nginx.service: Failed with result 'exit-code'.
+Feb 14 13:53:25 selinux systemd[1]: Failed to start The nginx HTTP and reverse proxy server.
+```
+> Видно, что после отключения nis_enabled служба NGINX не запустилась.
+
+### Далее разрешил в SELinux работу nginx на порту TCP 4881 c помощью добавления нестандартного порта в имеющийся тип.
+```shell
+[root@selinux ~]# semanage port -l | grep http
+http_cache_port_t              tcp      8080, 8118, 8123, 10001-10010
+http_cache_port_t              udp      3130
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+pegasus_https_port_t           tcp      5989
+```
+Добавил порт в тип http_port_t: semanage port -a -t http_port_t -p tcp 4881 и перезапустил службу NGINX.
+```shell
+[root@selinux ~]# semanage port -a -t http_port_t -p tcp 4881
+[root@selinux ~]# semanage port -l | grep  http_port_t
+http_port_t                    tcp      4881, 80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+[root@selinux ~]# systemctl restart nginx
+[root@selinux ~]# systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: active (running) since Sat 2026-02-14 13:59:34 UTC; 10s ago
+    Process: 3325 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 3326 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 3328 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 3329 (nginx)
+      Tasks: 3 (limit: 12026)
+     Memory: 2.9M
+        CPU: 29ms
+     CGroup: /system.slice/nginx.service
+             ├─3329 "nginx: master process /usr/sbin/nginx"
+             ├─3330 "nginx: worker process"
+             └─3331 "nginx: worker process"
+
+Feb 14 13:59:34 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 13:59:34 selinux nginx[3326]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 13:59:34 selinux nginx[3326]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Feb 14 13:59:34 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+```
+Проверил в браузере http://127.0.0.1:4881/: 
+
+![img_3.png](img_3.png)
+
+Потом удалил , что наделал до:
+```shell
+[root@selinux ~]# semanage port -d -t http_port_t -p tcp 4881
+[root@selinux ~]# semanage port -l | grep  http_port_t
+http_port_t                    tcp      80, 81, 443, 488, 8008, 8009, 8443, 9000
+pegasus_http_port_t            tcp      5988
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+[root@selinux ~]# systemctl status nginx
+× nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: failed (Result: exit-code) since Sat 2026-02-14 14:03:24 UTC; 6s ago
+   Duration: 3min 50.539s
+    Process: 3362 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 3364 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)
+        CPU: 16ms
+
+Feb 14 14:03:24 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 14:03:24 selinux nginx[3364]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 14:03:24 selinux nginx[3364]: nginx: [emerg] bind() to 0.0.0.0:4881 failed (13: Permission denied)
+Feb 14 14:03:24 selinux nginx[3364]: nginx: configuration file /etc/nginx/nginx.conf test failed
+Feb 14 14:03:24 selinux systemd[1]: nginx.service: Control process exited, code=exited, status=1/FAILURE
+Feb 14 14:03:24 selinux systemd[1]: nginx.service: Failed with result 'exit-code'.
+Feb 14 14:03:24 selinux systemd[1]: Failed to start The nginx HTTP and reverse proxy server.
+[root@selinux ~]# curl http://127.0.0.1:4881
+curl: (7) Failed to connect to 127.0.0.1 port 4881: Connection refused
+```
+### Разрешим формирование и установка модуля SELinux
+Пробую снова запустить NGINX:
+```shell
+[root@selinux ~]# systemctl start nginx
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+```
+> NGINX не запускается , т.к. SELinux его блокирует. 
+> Посмотрел логи NGINX.
+```shell
+[root@selinux ~]# grep nginx /var/log/audit/audit.log
+type=ADD_GROUP msg=audit(1771073942.352:682): pid=3604 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:groupadd_t:s0-s0:c0.c1023 msg='op=add-group id=989 exe="/usr/sbin/groupadd" hostname=? addr=? terminal=? res=success'UID="root" AUID="vagrant" ID="nginx"
+type=GRP_MGMT msg=audit(1771073942.358:683): pid=3604 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:groupadd_t:s0-s0:c0.c1023 msg='op=add-shadow-group id=989 exe="/usr/sbin/groupadd" hostname=? addr=? terminal=? res=success'UID="root" AUID="vagrant" ID="nginx"
+type=ADD_USER msg=audit(1771073942.461:684): pid=3612 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:useradd_t:s0-s0:c0.c1023 msg='op=add-user acct="nginx" exe="/usr/sbin/useradd" hostname=? addr=? terminal=? res=success'UID="root" AUID="vagrant"
+type=SOFTWARE_UPDATE msg=audit(1771073943.026:710): pid=3576 uid=0 auid=1000 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=install sw="nginx-filesystem-2:1.20.1-22.el9_6.3.alma.2.noarch" sw_type=rpm key_enforce=0 gpg_res=1 root_dir="/" comm="yum" exe="/usr/bin/python3.9" hostname=? addr=? terminal=? res=success'UID="root" AUID="vagrant"
+... и т.д. 
+```
+Воспользовался утилитой audit2allow для того, чтобы на основе логов SELinux сделать модуль, который разрешит работу nginx на нестандартном порту.
+```shell
+[root@selinux ~]# grep nginx /var/log/audit/audit.log | audit2allow -M nginx
+******************** IMPORTANT ***********************
+To make this policy package active, execute:
+
+semodule -i nginx.pp
+
+[root@selinux ~]# semodule -i nginx.pp
+```
+Запуск NGINX
+```shell
+[root@selinux ~]# systemctl start nginx
+
+[root@selinux ~]# systemctl status nginx
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: disabled)
+     Active: active (running) since Sat 2026-02-14 14:11:58 UTC; 3s ago
+    Process: 3414 ExecStartPre=/usr/bin/rm -f /run/nginx.pid (code=exited, status=0/SUCCESS)
+    Process: 3415 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+    Process: 3416 ExecStart=/usr/sbin/nginx (code=exited, status=0/SUCCESS)
+   Main PID: 3417 (nginx)
+      Tasks: 3 (limit: 12026)
+     Memory: 2.9M
+        CPU: 28ms
+     CGroup: /system.slice/nginx.service
+             ├─3417 "nginx: master process /usr/sbin/nginx"
+             ├─3418 "nginx: worker process"
+             └─3419 "nginx: worker process"
+
+Feb 14 14:11:58 selinux systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Feb 14 14:11:58 selinux nginx[3415]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Feb 14 14:11:58 selinux nginx[3415]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Feb 14 14:11:58 selinux systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+[root@selinux ~]# semodule -l | grep nginx
+nginx
+```
+Удалил модуль 
+```shell
+[root@selinux ~]# semodule -r nginx
+libsemanage.semanage_direct_remove_key: Removing last nginx module (no other nginx module exists at another priority).
+[root@selinux ~]# semodule -l | grep nginx
+[root@selinux ~]# systemctl restart nginx
+Job for nginx.service failed because the control process exited with error code.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+```
+---
