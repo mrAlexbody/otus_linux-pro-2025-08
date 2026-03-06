@@ -1,0 +1,55 @@
+---
+- name: Установка необходимых пакетов
+  dnf:
+    name:
+      - epel-release
+      - bind-utils
+      - curl
+      - wget
+      - vim
+      - tar
+      - policycoreutils-python-utils
+      - python3-libselinux
+      - python3-firewall
+      - firewalld
+    state: present
+
+- name: Запуск и включение firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Разрешить стандартные сервисы (DNS, HTTP, HTTPS)
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - ssh
+    - dns
+    - http
+    - https
+
+- name: Открытие портов из переменной "{{ firewall_ports }}"
+  firewalld:
+    port: "{{ item.port }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop: "{{ firewall_ports | default([]) }}"
+  when: firewall_ports is defined and firewall_ports | length > 0
+
+- name: Разрешение портов в SELinux
+  seport:
+    ports: "{{ item.port.split('/')[0] }}"
+    proto: "{{ item.port.split('/')[1] }}"
+    setype: http_port_t
+    state: present
+  loop: "{{ firewall_ports | default([]) }}"
+  when:
+    - ansible_selinux.status == "enabled"
+    - firewall_ports is defined
+    - firewall_ports | length > 0
+...

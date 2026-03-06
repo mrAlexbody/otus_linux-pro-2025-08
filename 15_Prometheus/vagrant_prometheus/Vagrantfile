@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
+Vagrant.configure("2") do |config|
+
+  config.ssh.host = "127.0.0.1"  
+  config.vm.box = "almalinux/9"
+  config.vm.hostname = "prometheus"
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.network "forwarded_port", guest: 9090, host: 9090
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+    vb.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: "dnf install -y python3 python3-pip"
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.inventory_path = "ansible/inventory"
+    ansible.limit = "prometheus"
+    ansible.host_key_checking = false
+    ansible.verbose = "vv"
+    ansible.extra_vars = {
+      ansible_user: 'vagrant',
+      ansible_python_interpreter: '/usr/bin/python3'
+    }
+  end
+end

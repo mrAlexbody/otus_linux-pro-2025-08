@@ -1,0 +1,96 @@
+---
+- name: Создание группу prometheus
+  group:
+    name: prometheus
+    system: yes
+    state: present
+
+- name: Создание пользователя prometheus
+  user:
+    name: prometheus
+    group: prometheus
+    shell: /bin/false
+    system: yes
+    create_home: no
+    home: /nonexistent
+    state: present
+
+- name: Создание каталога
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Загрузка архива Prometheus
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /tmp/prometheus.tar.gz
+    mode: 0644
+
+- name: Распаковка архива
+  unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /tmp
+    remote_src: yes
+    creates: /tmp/prometheus-{{ prometheus_version }}.linux-amd64
+
+- name: Копирование бинарного файла
+  copy:
+    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    remote_src: yes
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+  loop:
+    - prometheus
+    - promtool
+
+- name: Копирование консольной библиотеки
+  copy:
+    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/etc/prometheus/{{ item }}"
+    remote_src: yes
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+  loop:
+    - consoles
+    - console_libraries
+
+- name: Создание конфигурационного файла prometheus.yml
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: 0644
+  notify: restart prometheus
+
+- name: Создание systemd unit файла для prometheus
+  template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    mode: 0644
+  notify: reload systemd and restart prometheus
+
+- name: Запуск и включение Prometheus
+  systemd:
+    name: prometheus
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Удаление времянки из /tmp
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/prometheus.tar.gz
+    - "/tmp/prometheus-{{ prometheus_version }}.linux-amd64"
+...

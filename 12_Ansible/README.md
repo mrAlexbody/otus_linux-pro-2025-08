@@ -84,7 +84,7 @@ Bringing machine 'nginx' up with 'virtualbox' provider...
 ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
 MACHINES = {
   :nginx => {
-        :box_name => "generic/ubuntu2204",
+       :box_name => "generic/ubuntu2204",
         :vm_name => "nginx",
         :net => [
            ["192.168.11.150",  2, "255.255.255.0", "mynet"],

@@ -1,0 +1,23 @@
+---
+- name: Копирование RPM пакета на целевой сервер
+  copy:
+    src: grafana-10.4.2-1.x86_64.rpm
+    dest: /tmp/grafana.rpm
+    mode: '0644'
+
+- name: Установка пакета Grafana
+  dnf:
+    name: /tmp/grafana.rpm
+    state: present
+    disable_gpg_check: yes
+
+- name: Запуск и включение служб grafana-server
+  systemd:
+    name: grafana-server
+    enabled: yes
+    state: started
+
+- name: Удаление времянки из /tmp
+  file:
+    path: /tmp/grafana.rpm
+    state: absent

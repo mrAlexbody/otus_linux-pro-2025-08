@@ -1,0 +1,11 @@
+*.img
+*.env
+*.tfvars
+*.tfstate*
+*.terraform*
+*.vscode
+*accesskey*
+*.rpm
+.git
+.idea
+Установка PowerDNS

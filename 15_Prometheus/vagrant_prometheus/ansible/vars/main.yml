@@ -1,0 +1,13 @@
+prometheus_version: 2.44.0
+node_exporter_version: 1.5.0
+grafana_version: latest
+grafana_admin_password: admin
+
+prometheus_targets:
+  - localhost:9090
+  - localhost:9100
+
+firewall_ports:
+  - port: 9090/tcp
+  - port: 3000/tcp
+  - port: 9100/tcp
