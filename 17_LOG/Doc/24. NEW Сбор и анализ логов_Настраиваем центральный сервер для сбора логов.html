@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 25.2.7.2 (Windows)"/>
+	<meta name="author" content="alex"/>
+	<meta name="created" content="2021-10-10T13:05:00"/>
+	<meta name="changed" content="00:00:00"/>
+	<meta name="AppVersion" content="16.0000"/>
+	<meta name="DocSecurity" content="0"/>
+	<meta name="HyperlinksChanged" content="false"/>
+	<meta name="LinksUpToDate" content="false"/>
+	<meta name="ScaleCrop" content="false"/>
+	<meta name="ShareDoc" content="false"/>
+	<style type="text/css">
+		@page { size: 21cm 29.7cm; margin-left: 1.27cm; margin-right: 1.27cm }
+		p { line-height: 115%; text-align: left; margin-bottom: 0.25cm; orphans: 2; widows: 2; direction: ltr; background: transparent }
+		a:link { color: #0563c1; text-decoration: underline }
+		a:visited { color: #954f72; text-decoration: underline }
+	</style>
+</head>
+<body lang="ru-RU" text="#000000" link="#0563c1" vlink="#954f72" dir="ltr">
+<div title="header"><p style="line-height: 98%; margin-bottom: 1.17cm">
+	<br/>
+<br/>
+
+	</p>
+</div><p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_40b28d18.png" name="image2.png" align="left" width="177" height="48" border="0"/>
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Методическое
+пособие по выполнению домашнего задания
+по курсу «Администратор Linux. Professional»</b></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Стенд
+с Vagrant c Rsyslog</b></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Цель
+домашнего задания</b></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Научится
+проектировать централизованный сбор
+логов. Рассмотреть особенности разных
+платформ для сбора логов.</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Описание
+домашнего задания</b></font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">1.
+В Vagrant разворачиваем 2 виртуальные машины
+web и log</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">2.
+на web настраиваем nginx</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">3.
+на log настраиваем центральный лог сервер
+на любой системе на выбор</font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">journald;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">rsyslog;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">elk.</font></p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">4.
+настраиваем аудит, следящий за изменением
+конфигов nginx </font>
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Все
+критичные логи с web должны собираться
+и локально и удаленно.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Все
+логи с nginx должны уходить на удаленный
+сервер (локально только критичные).</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Логи
+аудита должны также уходить на удаленную
+систему.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font color="#0563c1"><font face="Roboto, serif"><b>Формат
+сдачи ДЗ - vagrant + ansible</b></font></font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto, serif"><b>Дополнительное
+задание</b></font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">развернуть
+	еще машину с elk</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">таким
+	образом настроить 2 центральных лог
+	системы elk и какую либо еще;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">в
+	elk должны уходить только логи Nginx;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">во
+	вторую систему все остальное.</font></p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font color="#0563c1"><font face="Roboto, serif"><b>Статус
+&quot;Принято&quot; ставится, если присылаете
+логи скриншоты без вагранта.</b></font></font></p>
+<p style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm"><font color="#0563c1"><font face="Roboto Light, serif"><i>Задание
+со звездочкой  выполняется по желанию.</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Введение</b></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Функция
+системного журналирования (логирование)
+— это основной источник информации о
+работе системы и ошибках. В системе
+Linux почти все действия записываются.
+Именно эти данные помогают разбираться
+в проблемах с ОС.</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Логи
+могут храниться как локально, так и
+пересылаться на удаленную систему.
+Пересылка логов имеет следующие плюсы:</font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Возможность
+	централизованного сбора и анализа
+	логов (все логи со всех устройств
+	прилетают в одно место. Это значительно
+	упростит работу с логами)</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Защита
+	от удаления логов на локальной машине
+	</font>
+	</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0cm"><font face="Roboto Light, serif">Оптимизация
+	места на диске в локальной ОС (логи не
+	будут храниться в ОС, т.к. будут сразу
+	пересылаться в систему сбора логов.
+	Данная функция настраивается отдельно)</font></p></li>
+</ul>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">В
+ОС Linux главным файлом локального
+журналирования является:</font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">Ubuntu/Debian
+	— /</font><font face="Roboto Light, serif"><i>var</i></font><font face="Roboto Light, serif">/log/syslog</font></p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif"><i>Логи
+в ОС можно настроить. Например, указывать
+больше информации или отключить
+логирование конкретного компонента. </i></font>
+</p>
+<p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif"><i>Помимо
+логов, в Unix-системах используют аудит.
+В linux эту функцию выполняет linux audit daemon.</i></font></p>
+<p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">Linux
+Audit Daemon - это среда, позволяющая проводить
+аудит событий в системе Linux. Используя
+мощную систему аудита возможно отслеживать
+многие типы событий для мониторинга и
+проверки системы, например:</font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">доступ
+	к файлам;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">изменение
+	прав на файлы;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">просмотр
+	пользователей, изменивших конкретный
+	файл;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">обнаружение
+	несанкционированных изменений;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">мониторинг
+	системных вызовов и функций;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">обнаружение
+	аномалий, таких как сбои;</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">мониторинг
+	набора команд.</font></p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0.18cm; margin-left: 1.27cm">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">Аудит
+различает 4 вида доступа к файлу:</font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">r
+	— чтение </font>
+	</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">w
+	— запись в файл </font>
+	</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">x
+	— выполнение файла</font></p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0.18cm"><font face="Roboto Light, serif">a
+	— изменение атрибута</font></p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0.18cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Функциональные
+и нефункциональные требования</font></p>
+<ul>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">ПК
+	на Unix c 8ГБ ОЗУ или виртуальная машина
+	с включенной Nested Virtualization.</font></p></li>
+</ul>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Предварительно
+установленное и настроенное следующее
+ПО: </font>
+</p>
+<ul>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Hashicorp
+	Vagrant (</font><a href="https://www.vagrantup.com/downloads"><font color="#0563c1"><font face="Roboto Light, serif"><u>https://www.vagrantup.com/downloads</u></font></font></a><font face="Roboto Light, serif">)
+	</font>
+	</p></li>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Oracle
+	VirtualBox (</font><a href="https://www.virtualbox.org/wiki/Linux_Downloads"><font color="#0563c1"><font face="Roboto Light, serif"><u>https://www.virtualbox.org/wiki/Linux_Downloads</u></font></font></a><font face="Roboto Light, serif">).
+	</font>
+	</p></li>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Ansible
+	(версия 2.7 и выше) -
+	</font><a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html"><font color="#0563c1"><font face="Roboto Light, serif"><u>https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html</u></font></font></a></p></li>
+</ul>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto, serif"><b>Инструкция
+по выполнению домашнего задания</b></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">1.
+Создаём виртуальные машины</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Создаём
+каталог, в котором будут храниться
+настройки виртуальной машины. В каталоге
+создаём файл с именем Vagrantfile, добавляем
+в него следующее содержимое: </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_652f954a.gif" name="Shape 12" alt="Shape 12" align="left" width="608" height="471">
+  <br clear="left"/>
+</img>
+<span id="Врезка1" dir="ltr" style="float: left; width: 16.09cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Vagrant</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">configure</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>(</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;2&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>)</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	Base VM OS configuration.</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">box
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;&quot;bento/ubuntu-22.04&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">provider
+	:virtualbox </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">v</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">v</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">memory
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">1512</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">v</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">cpus
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">2</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	Define two VMs with static private IP addresses.</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">boxes
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>{</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	:name </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=&gt;</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;web&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:ip
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=&gt;</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;192.168.56.10&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>},</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>{</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	:name </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=&gt;</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;log&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:ip
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=&gt;</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;192.168.56.15&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>}</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	Provision each of the VMs.</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">boxes</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">each
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">define
+	opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">hostname
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">network
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;private_network&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	ip: opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:ip</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Результатом
+выполнения команды </font><font color="#0070c0"><font face="Roboto Light, serif"><i>vagrant
+up </i></font></font><font face="Roboto Light, serif">станут 2
+созданные виртуальные машины</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Заходим
+на web-сервер: </font><font color="#0070c0"><font face="Roboto Light, serif"><i>vagrant
+ssh web</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Дальнейшие
+действия выполняются от пользователя
+root. Переходим в root пользователя: </font><font color="#0070c0"><font face="Roboto Light, serif"><i>sudo
+-i</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Для
+правильной работы c логами, нужно, чтобы
+на всех хостах было настроено одинаковое
+время. </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_bdec584b.gif" name="Shape 5" alt="Shape 5" align="left" width="710" height="165">
+  <br clear="left"/>
+</img>
+<span id="Врезка2" dir="ltr" style="float: left; width: 18.79cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>root@web:~#
+	timedatectl</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	          <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	Local
+	time: Sun 2023-12-17 20:16:41 MSK</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	      <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	Universal
+	time: Sun 2023-12-17 17:16:41 UTC</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	            <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	RTC
+	time: Sun 2023-12-17 17:16:41</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	           <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	Time
+	zone: Etc/UTC (MSK, +0300)</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>System
+	clock synchronized: no</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	         <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	NTP
+	service: inactive</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>	RTC
+	in local TZ: no</b></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">…</span></font></span></p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif"><i>Далее
+проверим, что время и дата указаны
+правильно: </i></font><font color="#2a6099"><font face="Roboto Light, serif"><i>date</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_7e2f8928.gif" name="Shape 13" alt="Shape 13" align="left" width="649" height="57">
+  <br clear="left"/>
+</img>
+<span id="Врезка3" dir="ltr" style="float: left; width: 17.17cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>~]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	date</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Sun
+	Dec 17 20:20:26 MSK 2023</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>~]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	</span></span></font></font></span></font></span></font></font>
+	</p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif"><i>Настроить
+NTP нужно на обоих серверах.</i></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">2.
+Установка nginx на виртуальной машине web</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">Установим nginx: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>apt
+update &amp;&amp; apt install -y nginx </i></font></font><font face="Roboto Light, serif"><i>
+</i></font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Проверим,
+что nginx работает корректно:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_e16ff89e.gif" name="Shape 11" alt="Shape 11" align="left" width="691" height="579">
+  <br clear="left"/>
+</img>
+<span id="Врезка4" dir="ltr" style="float: left; width: 18.29cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web:~</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	systemctl status nginx</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">●
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx.service
+	- A high performance web server and a reverse proxy server</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Loaded:
+	loaded (/lib/systemd/system/nginx.service; enabled; vendor preset:
+	enabled)</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Active:
+	active (running) since Sun 2023-12-17 20:20:50 MSK; 47s ago</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	  <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Docs:
+	man:nginx(8)</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Process:
+	2941 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process
+	on; (code=exited, status=0/SUCCESS)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Process:
+	2942 ExecStart=/usr/sbin/nginx -g daemon on; master_process on;
+	(code=exited, status=0/SUCCESS)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	  <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Main
+	PID: 3034 (nginx)</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Tasks:
+	3 (limit: 1586)</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	Memory:
+	4.7M</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	CPU:
+	31ms</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	CGroup:
+	/system.slice/nginx.service</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	        <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	├─3034
+	&quot;nginx: master process /usr/sbin/nginx -g daemon on;
+	master_process on;&quot;</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	        <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	├─3036
+	&quot;nginx: worker process&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	        <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">	└─3037
+	&quot;nginx: worker process&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;
+	&quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot;</span></span></font></font></font></font></span></font></span></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:20:50 web systemd[1]: Starting A high performance web server
+	and a reverse proxy server...</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:20:50 web systemd[1]: Started A high performance web server
+	and a reverse proxy server.</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web:~</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	</span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web:~</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	ss -tln | grep 80</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">LISTEN
+	  </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	       </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">511</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	             </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0.0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0.0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:80
+	           </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0.0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0.0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:*
+	             </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">LISTEN
+	  </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">0</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	       </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">511</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	                </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[::]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:80
+	              </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[::]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:*
+	             </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web:~</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	</span></span></font></font></span></font></span></font></font>
+	</p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Также
+работу nginx можно проверить на хосте. В
+браузере ввведем в адерсную строку
+</font><a href="http://192.168.56.10/"><font color="#1155cc"><font face="Roboto Light, serif"><u>http://192.168.56.10</u></font></font></a><font face="Roboto Light, serif">
+</font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_579719f9.png" name="image1.png" align="bottom" width="698" height="183" border="0"/>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Видим
+что nginx запускается корректно.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">3. Настройка центрального
+сервера сбора логов</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">Откроем еще одно окно
+терминала и подключаемся по ssh к ВМ log:
+</font><font color="#3465a4"><font face="Roboto Light, serif"><i>vagrant
+ssh log</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Перейдем
+в пользователя root: </font><font color="#3465a4"><font face="Roboto Light, serif"><i>sudo
+-i</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">rsyslog
+должен быть установлен по умолчанию в
+нашей ОС, проверим это:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_561bc620.gif" name="Shape 3" alt="Shape 3" align="left" width="696" height="99">
+  <br clear="left"/>
+</img>
+<span id="Врезка5" dir="ltr" style="float: left; width: 18.42cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>root@log:~#
+	apt list rsyslog</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>Listing...
+	Done</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>rsyslog/jammy-updates,jammy-security,now
+	8.2112.0-2ubuntu2.2 amd64 [installed,automatic]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Все
+настройки Rsyslog хранятся в файле
+/</font><font face="Roboto Light, serif"><i>etc</i></font><font face="Roboto Light, serif">/rsyslog.conf
+</font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Для
+того, чтобы наш сервер мог принимать
+логи, нам необходимо внести следующие
+изменения в файл: </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Открываем
+порт 514 (TCP и UDP):</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Находим
+закомментированные строки:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><span id="Врезка6" dir="ltr" style="position: absolute; top: 0cm; width: 15.54cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	provides UDP syslog reception</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#module(load=&quot;imudp&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#input(type=&quot;imudp&quot;
+	port=&quot;514&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	provides TCP syslog reception</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#module(load=&quot;imtcp&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#input(type=&quot;imtcp&quot;
+	port=&quot;514&quot;)</span></span></font></font></span></font></span></font></font></p>
+</span><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_1d0ba9dc.gif" name="Shape 8" alt="Shape 8" align="bottom" width="587" height="137"/>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">И
+приводим их к виду:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_8089b18a.gif" name="Shape 9" alt="Shape 9" align="left" width="587" height="127">
+  <br clear="left"/>
+</img>
+<span id="Врезка7" dir="ltr" style="float: left; width: 15.53cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	provides UDP syslog reception</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#355269"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">module(load=&quot;imudp&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#355269"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">input(type=&quot;imudp&quot;
+	port=&quot;514&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#
+	provides TCP syslog reception</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#2a6099"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">module(load=&quot;imtcp&quot;)</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#2a6099"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">input(type=&quot;imtcp&quot;
+	port=&quot;514&quot;)</span></span></font></font></span></font></span></font></font></p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_833e5b15.gif" name="Shape 2" alt="Shape 2" align="left" vspace="1" width="674" height="70">
+  <br clear="left"/>
+</img>
+<span id="Врезка8" dir="ltr" style="float: left; width: 17.82cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#008000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">#Add
+	remote logs</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>$template</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	RemoteLogs</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>*.*</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">?R</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">emoteLogs</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>&amp;</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>~</b></span></font></font></span></font></span></font></font></p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">В
+конец файла /</font><font face="Roboto Light, serif"><i>etc</i></font><font face="Roboto Light, serif">/rsyslog.conf
+добавляем правила приёма сообщений от
+хостов:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Данные
+параметры будут отправлять в папку
+/</font><font face="Roboto Light, serif"><i>var</i></font><font face="Roboto Light, serif">/log/rsyslog
+логи, которые будут приходить от других
+серверов. Например, Access-логи nginx от
+сервера web, будут идти в файл
+/</font><font face="Roboto Light, serif"><i>var</i></font><font face="Roboto Light, serif">/log/rsyslog/web/nginx_access.log</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Далее
+сохраняем файл и перезапускаем службу
+rsyslog: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>systemctl
+restart rsyslog</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Если
+ошибок не допущено, то у нас будут видны
+открытые порты TCP,UDP 514:</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_b353b3e0.gif" name="Shape 6" alt="Shape 6" align="left" width="699" height="211">
+  <br clear="left"/>
+</img>
+<span id="Врезка9" dir="ltr" style="float: left; width: 18.5cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">root@log:~#
+	ss -tuln</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">Netid
+	    	State       	Recv-Q      	Send-Q                	Local
+	Address:Port               	Peer Address:Port     	Process    	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">udp
+	      	UNCONN      	0           	0                          
+		0.0.0.0:514                     	0.0.0.0:*                       	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">udp
+	      	UNCONN      	0           	0                    
+		127.0.0.53%lo:53                      	0.0.0.0:*                   
+	   	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">udp
+	      	UNCONN      	0           	0                   
+		10.0.2.15%eth0:68                      	0.0.0.0:*                  
+	    	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">udp
+	      	UNCONN      	0           	0                             
+		[::]:514                        	[::]:*                       	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">tcp
+	      	LISTEN      	0           	4096                 
+		127.0.0.53%lo:53                      	0.0.0.0:*                   
+	   	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">tcp
+	      	LISTEN      	0           	128                        
+		0.0.0.0:22                      	0.0.0.0:*                       	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">tcp
+	      	LISTEN      	0           	25                         
+		0.0.0.0:514                     	0.0.0.0:*                       	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">tcp
+	      	LISTEN      	0           	128                           
+		[::]:22                         	[::]:*                       	 </span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Calibri, serif"><font size="2" style="font-size: 10pt"><span style="font-style: normal"><span style="font-weight: normal">tcp
+	      	LISTEN      	0           	25                            
+		[::]:514                        	[::]:*</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Далее
+настроим отправку логов с web-сервера</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Заходим
+на web сервер: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>vagrant
+ssh web</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Переходим
+в root пользователя: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>sudo
+-i </i></font></font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Проверим
+версию nginx:</font><font color="#2a6099"><font face="Roboto Light, serif">
+nginx -v</font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif"><i>Версия
+nginx должна быть 1.7 или выше. В нашем
+примере используется версия nginx 1.18. </i></font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Находим
+в файле </font><font face="Roboto Light, serif"><i>/etc/nginx/nginx.conf
+раздел с логами и приводим их к следующему
+виду:</i></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_aaf039dc.gif" name="Shape 10" alt="Shape 10" align="left" width="718" height="66">
+  <br clear="left"/>
+</img>
+<span id="Врезка10" dir="ltr" style="float: left; width: 19.01cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">error_log
+	 </span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>/</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">var</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>/</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">log</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>/</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>/</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">error</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">log</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>;</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">error_log
+	 syslog:server=</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">192.168</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">56.15</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:514</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">tag</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx_error</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>;</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">access_log
+	syslog:server=</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">192.168</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#ff8000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">56.15</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:514</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">tag</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx_access</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">severity</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">info
+	combined</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>;</b></span></font></font></span></font></span></font></font></p>
+</span><br/>
+<br/>
+
+</p>
+<p align="justify" style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Для
+Access-логов указываем удаленный сервер
+и уровень логов, которые нужно отправлять.
+Для error_log добавляем удаленный сервер.
+</font><font face="Roboto Light, serif"><i>Если требуется
+чтобы логи хранились локально и
+отправлялись на удаленный сервер,
+требуется указать 2 строки. 	</i></font></p>
+<p align="justify" style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Tag
+нужен для того, чтобы логи записывались
+в разные файлы.</font></p>
+<p align="justify" style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">По
+умолчанию, error-логи отправляют логи,
+которые имеют severity: error, crit, alert и emerg. Если
+требуется хранить или пересылать логи
+с другим severity, то это также можно указать
+в настройках nginx. </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Далее
+проверяем, что конфигурация nginx указана
+правильно: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>nginx
+-t</i></font></font><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_bbc237c7.gif" name="Shape 14" alt="Shape 14" align="left" width="678" height="57">
+  <br clear="left"/>
+</img>
+<span id="Врезка11" dir="ltr" style="float: left; width: 17.94cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@web:~#
+	nginx -t</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx:
+	the configuration file /etc/nginx/nginx.conf syntax is ok</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">nginx:
+	configuration file /etc/nginx/nginx.conf test is successful</span></span></font></font></span></font></span></font></font></p>
+</span>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Далее
+перезапускаем nginx: </font><font color="#2a6099"><font face="Roboto Light, serif"><i>systemctl
+restart nginx</i></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Попробуем
+несколько раз зайти по адресу
+</font><font color="#0563c1"><font face="Roboto Light, serif"><u>http://192.168.56.10</u></font></font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Далее
+заходим на log-сервер и смотрим информацию
+об nginx:</font></p>
+<ul>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font color="#2a6099"><font face="Roboto Light, serif"><i>cat
+	/var/log/rsyslog/web/nginx_access.log </i></font></font>
+	</p></li>
+	<li><p style="line-height: 98%; margin-bottom: 0.28cm"><font color="#2a6099"><font face="Roboto Light, serif"><i>cat
+	/var/log/rsyslog/web/nginx_error.log </i></font></font>
+	</p></li>
+</ul>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Поскольку
+наше приложение работает без ошибок,
+файл </font><font color="#2a6099"><font face="Roboto Light, serif"><i>nginx_error.log</i></font></font><font face="Roboto Light, serif">
+не будет создан. Чтобы сгенерировать
+ошибку, можно переместить файл
+веб-страницы, который открывает nginx</font><font color="#2a6099"><font face="Roboto Light, serif"><i>
+- </i></font></font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font color="#2a6099"><font face="Roboto Light, serif"><i>mv
+/var/www/html/index.nginx-debian.html /var/www/ </i></font></font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">После
+этого мы получим 403 ошибку.</font></p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Видим,
+что логи отправляются корректно. </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_1183d2dd.gif" name="Shape 4" alt="Shape 4" align="left" width="691" height="471">
+  <br clear="left"/>
+</img>
+<span id="Врезка12" dir="ltr" style="float: left; width: 18.29cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@log:~#
+	cat /var/log/rsyslog/web/nginx_error.log</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:36:15 web nginx_error: 2023/12/17 20:36:15 [error] 3132#3132:
+	*2 directory index of &quot;/var/www/html/&quot; is forbidden,
+	client: 192.168.56.1, server: _, request: &quot;GET / HTTP/1.1&quot;,
+	host: &quot;192.168.56.10&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:36:16 web nginx_error: 2023/12/17 20:36:16 [error] 3132#3132:
+	*2 directory index of &quot;/var/www/html/&quot; is forbidden,
+	client: 192.168.56.1, server: _, request: &quot;GET / HTTP/1.1&quot;,
+	host: &quot;192.168.56.10&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">root@log:~#
+	cat /var/log/rsyslog/web/nginx_access.log</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:34:40 web nginx_access: 192.168.56.1 - - [17/Dec/2023:20:34:40
+	+0300] &quot;GET / HTTP/1.1&quot; 304 0 &quot;-&quot; &quot;Mozilla/5.0
+	(X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:34:40 web nginx_access: message repeated 2 times: [
+	192.168.56.1 - - [17/Dec/2023:20:34:40 +0300] &quot;GET / HTTP/1.1&quot;
+	304 0 &quot;-&quot; &quot;Mozilla/5.0 (X11; Ubuntu; Linux x86_64;
+	rv:109.0) Gecko/20100101 Firefox/116.0&quot;]</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:34:41 web nginx_access: 192.168.56.1 - - [17/Dec/2023:20:34:41
+	+0300] &quot;GET / HTTP/1.1&quot; 304 0 &quot;-&quot; &quot;Mozilla/5.0
+	(X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:34:41 web nginx_access: message repeated 4 times: [
+	192.168.56.1 - - [17/Dec/2023:20:34:41 +0300] &quot;GET / HTTP/1.1&quot;
+	304 0 &quot;-&quot; &quot;Mozilla/5.0 (X11; Ubuntu; Linux x86_64;
+	rv:109.0) Gecko/20100101 Firefox/116.0&quot;]</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">Dec
+	17 20:34:42 web nginx_access: 192.168.56.1 - - [17/Dec/2023:20:34:42
+	+0300] &quot;GET / HTTP/1.1&quot; 304 0 &quot;-&quot; &quot;Mozilla/5.0
+	(X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+</span><br/>
+<br/>
+
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">4.
+Создать третью виртуальную машину,
+настроить rsyslog на отправку всех логов
+на центральный сервер логов. </font>
+</p>
+<p style="line-height: 98%; margin-bottom: 0.28cm"><font face="Roboto Light, serif">Пример
+настройки rsyslog для отправки логов взять
+из лекционного материала.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto, serif"><b>Критерии оценивания</b></font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">Статус &quot;Принято&quot;
+ставится при выполнении следующих
+условий:</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">1. Ссылка на репозиторий
+GitHub. </font>
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">2. Логи и скриншоты
+без Vagrantfile</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">Помимо базового
+задания </font><font face="Roboto, serif"><b>рекомендуется
+</b></font><font face="Roboto Light, serif">сделать данное
+задание следующим образом:</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">3. Все настройки сделать
+с помощью Ansible и добавить запуск Ansible
+playbook из Vagrantfile.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">Для запуска playbook по
+команде </font><font color="#2a6099"><font face="Roboto Light, serif"><i>vagrant
+up</i></font></font><font face="Roboto Light, serif"> достаточно
+добавить следующую конструкцию в раздел
+Boxes:</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<span id="Врезка13" dir="ltr" style="position: absolute; top: 0cm; width: 18.46cm; border: none; padding: 0cm; background: #ffffff"><p align="left" style="line-height: 100%; margin-bottom: 0cm">
+	<span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	<font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">boxes</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">each
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">define
+	opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">hostname
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">network
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;private_network&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>,</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	ip: opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:ip</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>if</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	opts</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>==</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	boxes</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">last</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>[</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">:name</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>]</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span></font></font>
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	       <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">config</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">vm</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">provision
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;ansible&quot;</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>do</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">ansible</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>|</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	         <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">ansible</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">playbook
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;ansible/provision.yml&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	         <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">ansible</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">inventory_path
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;ansible/hosts&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	         <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">ansible</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">host_key_checking
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;false&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	         <font face="Calibri, serif"><font size="2" style="font-size: 11pt"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">ansible</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>.</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">limit
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>=</b></span></font></font></span></font></span><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">
+	</span></span></font></font></span></font></span><span style="font-variant: normal"><font color="#808080"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><span style="font-weight: normal">&quot;all&quot;</span></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	       </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	     </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><br/>
+
+	</p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	   </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+	<p align="left" style="line-height: 100%; margin-bottom: 0cm"><span style="font-variant: normal"><font color="#000000"><span style="text-decoration: none">
+	 </span></font></span><font face="Calibri, serif"><font size="2" style="font-size: 11pt"><span style="font-variant: normal"><font color="#0000ff"><span style="text-decoration: none"><font face="Courier New, serif"><font size="2" style="font-size: 11pt"><span style="font-style: normal"><b>end</b></span></font></font></span></font></span></font></font></p>
+</span><img src="24.%20NEW%20%D0%A1%D0%B1%D0%BE%D1%80%20%D0%B8%20%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_%D0%9D%D0%B0%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%B5%D0%BC%20%D1%86%D0%B5%D0%BD%D1%82%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B1%D0%BE%D1%80%D0%B0%20%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2_html_bd904262.gif" name="Shape 7" alt="Shape 7" align="bottom" width="698" height="267"/>
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">4. Предоставить
+Vagrantfile</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto, serif"><b>Опционально для
+выполнения:</b></font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">* развернуть еще машину
+с elk</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">- таким образом
+настроить 2 центральных лог системы elk
+и какую либо еще;</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">- в elk должны уходить
+только логи nginx;</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto Light, serif">- во вторую систему
+все остальное.</font></p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0cm; background: #ffffff">
+<font face="Roboto, serif"><b>Рекомендуемые источники</b></font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; background: #ffffff">
+	<font face="Roboto Light, serif">Статья «Настройка
+	rsyslog для хранения логов на удаленном
+	сервере» -
+	</font><a href="https://www.dmosk.ru/miniinstruktions.php?mini=rsyslog"><font color="#0563c1"><font face="Roboto Light, serif"><u>https://www.dmosk.ru/miniinstruktions.php?mini=rsyslog</u></font></font></a></p></li>
+	<li><p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; background: #ffffff">
+	<font face="Roboto Light, serif">Статья «Elasticsearch +
+	Kibana + Logstash на Ubuntu» -
+	</font><a href="https://www.dmosk.ru/instruktions.php?object=elk-ubuntu#clients-install-ubuntu"><font color="#1155cc"><font face="Roboto Light, serif"><u>https://www.dmosk.ru/instruktions.php?object=elk-ubuntu#clients-install-ubuntu</u></font></font></a></p></li>
+	<li><p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; background: #ffffff">
+	<font face="Roboto Light, serif">Статья «Директивы в
+	nginx» - </font><font color="#0563c1"><font face="Roboto Light, serif"><u>https://nginx.org/ru/docs/ngx_core_module.html#error_log</u></font></font></p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; background: #ffffff">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; margin-left: 1.27cm; background: #ffffff">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; margin-left: 1.27cm; background: #ffffff">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.1cm; margin-bottom: 0.1cm; margin-left: 1.27cm; background: #ffffff">
+<br/>
+<br/>
+
+</p>
+<div title="footer"><p style="line-height: 98%; margin-top: 1.17cm; margin-bottom: 0.28cm">
+	<br/>
+<br/>
+
+	</p>
+</div>
+</body>
+</html>
