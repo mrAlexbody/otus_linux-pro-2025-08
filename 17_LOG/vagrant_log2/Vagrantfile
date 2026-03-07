@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "almalinux/9"
+  config.ssh.host = "127.0.0.1" # Исправление для WSL2
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+    v.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: "dnf install -y python3 nano"
+
+  config.vm.define "web" do |web|
+    web.vm.hostname = "web"
+    web.vm.network "private_network", ip: "192.168.56.11"
+  end
+
+  config.vm.define "log" do |log|
+    log.vm.hostname = "log"
+    log.vm.network "private_network", ip: "192.168.56.15"
+  end
+
+  # Центральный сервер сбора логов
+  config.vm.define "log2" do |log2|
+    log2.vm.hostname = "log2"
+    log2.vm.network "private_network", ip: "192.168.56.12"
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.groups = {
+      "clients" => ["web", "log"],
+      "server"  => ["log2"]
+    }
+  end
+end
