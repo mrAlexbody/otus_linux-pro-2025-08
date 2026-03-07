@@ -1,0 +1,155 @@
+---
+- name: Настройка ограничений и Docker
+  hosts: otus-pam
+  become: yes
+  vars:
+    admin_group: admin
+    holiday_file: /etc/holidays
+    login_script: /usr/local/bin/login.sh
+    docker_user: dockeruser
+    holidays:
+      - "2026-01-01"
+      - "2026-01-07"
+      - "2026-05-01"
+      - "2026-05-09"
+      - "2026-06-12"
+      - "2026-11-04"
+
+  tasks:
+    - name: Создание пользователей otusadm и otus
+      user:
+        name: "{{ item }}"
+        password: "{{ 'Otus2022!' | password_hash('sha512') }}"
+        state: present
+      loop:
+        - otusadm
+        - otus
+
+    - name: Создание группы admin
+      group:
+        name: "{{ admin_group }}"
+        state: present
+
+    - name: Добавление пользователей в группу admin
+      user:
+        name: "{{ item }}"
+        groups: "{{ admin_group }}"
+        append: yes
+      loop:
+        - root
+        - vagrant
+        - otusadm
+
+    - name: Добавить otusadm в группу wheel
+      user:
+        name: otusadm
+        groups: wheel
+        append: yes
+
+    - name: Создание файла с праздниками
+      copy:
+        content: |
+          {% for h in holidays %}
+          {{ h }}
+          {% endfor %}
+        dest: "{{ holiday_file }}"
+        mode: 0644
+
+    - name: Установка скрипта ограничения доступа
+      copy:
+        dest: "{{ login_script }}"
+        mode: 0755
+        content: |
+          #!/bin/bash
+          HOLIDAYS_FILE="{{ holiday_file }}"
+          TODAY=$(date +%Y-%m-%d)
+
+          is_holiday() {
+              if [ -f "$HOLIDAYS_FILE" ]; then
+                  grep -Fxq "$TODAY" "$HOLIDAYS_FILE" && return 0
+              fi
+              return 1
+          }
+
+          if is_holiday; then
+              exit 0
+          fi
+
+          if [ $(date +%a) = "Sat" ] || [ $(date +%a) = "Sun" ]; then
+              if getent group {{ admin_group }} | grep -qw "$PAM_USER"; then
+                  exit 0
+              else
+                  exit 1
+              fi
+          else
+              exit 0
+          fi
+
+    - name: Добавление вызова скрипта в PAM (sshd, секция account)
+      lineinfile:
+        path: /etc/pam.d/sshd
+        insertbefore: '^account\s+required\s+pam_nologin\.so'
+        line: 'account    required     pam_exec.so {{ login_script }}'
+        state: present
+      notify: restart sshd
+
+    - name: Разрешить аутентификацию по паролю в SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+      notify: restart sshd
+
+
+    - name: Установка необходимых пакетов для Docker
+      dnf:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Добавление репозитория Docker
+      command:
+        cmd: yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Установка Docker
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Запуск и включение Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Создание пользователя для Docker
+      user:
+        name: "{{ docker_user }}"
+        state: present
+
+    - name: Добавление пользователя в группу docker
+      user:
+        name: "{{ docker_user }}"
+        groups: docker
+        append: yes
+
+    - name: Право на перезапуск Docker через sudo
+      copy:
+        dest: "/etc/sudoers.d/{{ docker_user }}-docker"
+        content: "{{ docker_user }} ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart docker\n"
+        mode: 0440
+        validate: 'visudo -cf %s'
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted

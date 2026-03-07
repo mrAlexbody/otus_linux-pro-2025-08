@@ -1,0 +1,275 @@
+[33mcommit ad4abbfdcdd82bcbff645da08fadf0473a88410b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Mar 6 18:10:51 2026 +0300
+
+    HW 15 "Prometheus"
+
+[33mcommit ce5fe3d0d42b657fd22c46dec056f675a22502dd[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Mar 6 18:08:13 2026 +0300
+
+    HW 15 "Prometheus"
+
+[33mcommit c7a17f660a3ac3f80bd50a4a79a7b856ecbd830d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Mar 5 21:50:18 2026 +0300
+
+    HW 14 "Docker"
+
+[33mcommit c8205a3087e841e9d8346179c7435b8292d5be94[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Mar 5 21:49:05 2026 +0300
+
+    HW 14 "Docker"
+
+[33mcommit 0119570b7a59e7ded0c72e8410b45eb0e04bf6ce[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Wed Feb 18 00:32:09 2026 +0300
+
+    HW 14 "Docker"
+
+[33mcommit 6f41d3094d223be774c23e92dfdc4ae076f2bf72[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Wed Feb 18 00:20:50 2026 +0300
+
+    HW 13 "Vagrant"
+
+[33mcommit 91c59af52fdfb98c9c7d0b238ab5dbed60b1d3b6[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Feb 15 00:08:47 2026 +0300
+
+    HW 12 "Ansible"
+
+[33mcommit 3a0d9e73eb367bbab14f20d7392881ae32a45b44[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Feb 14 22:54:40 2026 +0300
+
+    Create HW12 "Ansible"
+
+[33mcommit 9de38eea1a33aaf64b852eb4cd38c553cda8c5af[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Feb 14 22:11:19 2026 +0300
+
+    Create HW12 "Ansible"
+
+[33mcommit 2ea8b96945461e28a7fcc39a3824bc0dace04daa[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Feb 14 17:15:37 2026 +0300
+
+    Create HW11 "Selinux"
+
+[33mcommit d48ff0c261410393a64348a3bdca815432b60c16[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Feb 14 16:27:28 2026 +0300
+
+    Create HW11 "Selinux"
+
+[33mcommit 79b9c9661708fac67a1c0188438aa21ec4f244af[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Jan 19 21:53:28 2026 +0300
+
+    Create HW11 "Selinux"
+
+[33mcommit 913873740661881be9dbd60d7887c14ab627e2a6[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Jan 17 02:41:35 2026 +0300
+
+    Create HW11 "Selinux"
+
+[33mcommit b2a2042e906f504d46e26a1a81a3ad29296d7527[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Jan 16 19:35:15 2026 +0300
+
+    Create HW11 "Selinux"
+
+[33mcommit c47f9e815e376f4ce6098e3f7907b6db93f19a8c[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Jan 16 19:26:40 2026 +0300
+
+    Create HW10 "LSOF"
+
+[33mcommit c4298c696ce2476b181ce48ffbe4b70f97aed782[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Jan 15 20:50:09 2026 +0300
+
+    Create HW09 "BASH"
+
+[33mcommit da4da5158067f7a5f344be1f964b941b6d47f500[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Jan 15 20:46:22 2026 +0300
+
+    Create HW09 "BASH"
+
+[33mcommit 03bbfbb853b130950814333a26aa9b09de024645[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Dec 18 00:26:58 2025 +0300
+
+    Create HW09 "BASH"
+
+[33mcommit 8ba1890684fcd37b67444a85009b894669eaf295[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Thu Dec 18 00:23:55 2025 +0300
+
+    Create HW08 "System initialization. Systemd"
+
+[33mcommit 969b955558f2d2892224bbd7f3f6c1e59d51b187[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Tue Dec 16 01:16:27 2025 +0300
+
+    Create HW08 "System initialization. Systemd"
+
+[33mcommit cf582da9b4cdce5a35b75b045b5f45d66372c889[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Tue Dec 16 00:01:15 2025 +0300
+
+    PowerDNS Installation
+
+[33mcommit d973d1a5b904bbf264b83a18ab54ac8ffc5bb744[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Dec 14 22:54:44 2025 +0300
+
+    Create HW08 "System initialization. Systemd"
+
+[33mcommit 73cef1898b95a7c5afa5d1de32009105e0239803[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Dec 14 20:29:39 2025 +0300
+
+    Create HW08 "System initialization. Systemd"
+
+[33mcommit 6de1e71b0ea1223ec41270468a177103d233c589[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Dec 14 20:23:23 2025 +0300
+
+    Create HW07 "Working with the bootloader"
+
+[33mcommit d2c31ee7feeaf770746c5e9ad26ea43a236b3674[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Dec 14 20:15:31 2025 +0300
+
+    Create HW07 "Working with the bootloader"
+
+[33mcommit c6555a27babdaede748fc9be3eb8fc18cecd5421[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Dec 14 20:12:17 2025 +0300
+
+    Create HW07 "Working with the bootloader"
+
+[33mcommit 9459cd0e0b755bb89b1a71dceef65de806d09194[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Wed Dec 3 00:12:13 2025 +0300
+
+    Create HW07 "Working with the bootloader"
+
+[33mcommit 7f18e794b8316d1fc5faf2959c5640a60ca12a6f[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Tue Dec 2 17:44:52 2025 +0300
+
+    Create HW06 "Working with NFS"
+
+[33mcommit af39fb5097d05c0709f642e6cdb13adb88988482[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Dec 1 01:33:10 2025 +0300
+
+    Create HW06 "Working with NFS"
+
+[33mcommit 5d182e0296b76af590620b06b6118f09f5c801e6[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Dec 1 01:21:28 2025 +0300
+
+    Create HW05 "Working with NFS"
+
+[33mcommit 2ad7ebf0ebcb88320365f7703bd04986263012b4[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Nov 30 21:01:15 2025 +0300
+
+    Create HW05 "Working with NFS"
+
+[33mcommit fce665868c862c15b9622f202e50ca3bba3ada07[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sun Nov 30 20:52:48 2025 +0300
+
+    Create HW05 "Working with NFS"
+
+[33mcommit de9cf305174e45b725a4f7e40df15f1cae3cf425[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Nov 29 16:14:14 2025 +0300
+
+    Create HW04 "Working with ZVS" the end...
+
+[33mcommit 590570e7c4f03a301a126f2f6e5a8b1e2db2faea[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Nov 29 16:11:16 2025 +0300
+
+    Create HW04 "Working with ZVS" the end...
+
+[33mcommit 4f1e369550739e7e348c93b8df36c28f99358249[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Nov 14 23:59:38 2025 +0300
+
+    Create HW04 "Working with ZVS"
+
+[33mcommit 1649df8296e3500e2cc78ec0a1d4620e800108d8[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Oct 18 17:18:13 2025 +0300
+
+    Create HW03 "Working with LVM"
+
+[33mcommit c78edc333e1474922a976d2d6fad761199973243[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Sep 27 12:41:15 2025 +0300
+
+    Create HW03 "Working with LVM"
+
+[33mcommit eea5d21a7968e0b43cfb4cc041a86e2895289f34[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Sep 27 12:37:28 2025 +0300
+
+    Create HW02 "Working with mdadm"
+
+[33mcommit 87a032ee46bb98d37b192e6ed4956df18be0342c[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Sep 27 12:35:24 2025 +0300
+
+    Update README.md
+
+[33mcommit 98c2e2aeea274a9150ba5098198f432dff505800[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Sat Sep 27 12:34:24 2025 +0300
+
+    Create HW02 "Working with mdadm"
+
+[33mcommit 8b1f771b9dea3ff39a4380f6cad346bd467dbc2a[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Sep 22 13:29:50 2025 +0300
+
+    Update README.md
+
+[33mcommit dfbfc7466ff115ae95fbd679d6589d4b1b83e4ae[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Sep 22 13:28:51 2025 +0300
+
+    Create HW 01
+
+[33mcommit 991ad2e47eca32a1998fe88432193a285f337e53[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Mon Sep 22 12:46:09 2025 +0300
+
+    Create git HW
+
+[33mcommit 103b2ff97fba6bfa347360b8c8d18ed5c469c66b[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Aug 29 23:42:37 2025 +0300
+
+    Update README.md
+
+[33mcommit 04f1d1f36beba490e965dd3430ba0959fff5d6c0[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Aug 29 23:42:17 2025 +0300
+
+    Update README.md
+
+[33mcommit a9dd33ea42bdf22078cfd07bcb8edbb9900ddec3[m
+Author: Myskin Alexander <83454674+mrAlexbody@users.noreply.github.com>
+Date:   Fri Aug 29 23:41:39 2025 +0300
+
+    Initial commit
