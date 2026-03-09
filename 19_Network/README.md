@@ -45,7 +45,7 @@ graph TD
     Office1 --> Central
     Office2 --> Central
     Central --> IRouter{IRouter}
-    IRouter --> [Internet]
+    IRouter --> Internet
 ```
 
 **Итого должны получится следующие сервера:**
