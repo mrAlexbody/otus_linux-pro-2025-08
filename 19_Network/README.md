@@ -41,11 +41,7 @@
 **Это типа схема сети =):**
 
 ```mermaid
-graph TD;
-    [ Office1 ]-->{Central};
-    [ Office2 ]-->{Central};
-    {Central}-->[IPRouter];
-    [IPRouter]-->(Internet);
+info
 ```
 
 **Итого должны получится следующие сервера:**
