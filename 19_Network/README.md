@@ -73,4 +73,24 @@ graph TD
 _P.S: Формат сдачи ДЗ - vagrant + ansible_
 
 ----
+Схема сети:
+```mermaid
+graph TD
+    Internet((Internet)) --- inetRouter
 
+    inetRouter[inetRouter <br/> 192.168.255.1/30]
+    inetRouter --- centralRouter
+
+    centralRouter{centralRouter <br/> 192.168.255.2/30}
+    
+    %% Подключение центрального сервера
+    centralRouter --- |directors-net| centralServer[centralServer <br/> 192.168.0.2/28]
+
+    %% Ветки офисов
+    centralRouter --- |office1-central <br/> 192.168.255.9/30| office1Router[office1Router]
+    centralRouter --- |office2-central <br/> 192.168.255.5/30| office2Router[office2Router]
+
+    %% Подсети офисов
+    office1Router --- |managers-net <br/> 192.168.2.129/26| office1Server[office1Server <br/> 192.168.2.130/26]
+    office2Router --- |dev2-net <br/> 192.168.1.1/25| office2Server[office2Server <br/> 192.168.1.2/25]
+```
