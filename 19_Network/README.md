@@ -41,9 +41,13 @@
 **Это типа схема сети =):**
 
 ```mermaid
-graph LR
-    Office1 & Office2 --> Central
-    Central -- IRouter --> Internet
+graph TD
+    Office1 --> Central
+    Office2 --> Central
+    Central --> IRouter{IRouter}
+    IRouter --> Internet
+    IRouter --> LocalNetwork[Локальная сеть]
+    IRouter --> Backup[Бэкап канал]
 ```
 
 **Итого должны получится следующие сервера:**
