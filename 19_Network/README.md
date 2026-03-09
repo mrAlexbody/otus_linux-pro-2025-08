@@ -39,6 +39,7 @@
 - 192.168.0.64/26 - wifi
 
 **Это типа схема сети =):**
+
 ```mermaid
 graph TD;
     [ Office1 ]-->{Central};
