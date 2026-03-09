@@ -42,10 +42,8 @@
 
 ```mermaid
 graph LR
-    Office1 -- Central
-    Office2 -- Central
-    Central -- {IRouter} -- Internet
-
+    Office1 & Office2 --> Central
+    Central -- IRouter --> Internet
 ```
 
 **Итого должны получится следующие сервера:**
