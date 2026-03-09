@@ -40,9 +40,11 @@
 
 **Это типа схема сети =):**
 ```mermaid
-[ Office1 ] -->\
-                --> {Central}--> [IRouter] --> (internet)
-[ Office2 ] -->/
+graph TD;
+    [ Office1 ]-->{Central};
+    [ Office2 ]-->{Central};
+    {Central}-->[IPRouter];
+    [IPRouter]-->(Internet);
 ```
 
 **Итого должны получится следующие сервера:**
