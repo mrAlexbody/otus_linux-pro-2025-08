@@ -42,12 +42,10 @@
 
 ```mermaid
 graph TD
-    Office1 --> Central
-    Office2 --> Central
+    Office1 --> Central{Office1}
+    Office2 --> Central{Office2}
     Central --> IRouter{IRouter}
-    IRouter --> Internet
-    IRouter --> LocalNetwork[Локальная сеть]
-    IRouter --> Backup[Бэкап канал]
+    IRouter --> [Internet]
 ```
 
 **Итого должны получится следующие сервера:**
