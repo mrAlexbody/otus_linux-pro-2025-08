@@ -1,0 +1,190 @@
+---
+- name: Подготовка EPEL и установка Borg
+  hosts: all
+  become: yes
+  tasks:
+    - name: Установка репозитория epel-release
+      dnf:
+        name: epel-release
+        state: present
+
+    - name: Включение репозитория CRB
+      command: dnf config-manager --set-enabled crb
+      register: crb_enable
+      changed_when: "crb_enable.rc == 0"
+
+    - name: Установка пакета borgbackup
+      dnf:
+        name: borgbackup
+        state: present
+        update_cache: yes
+
+- name: Настройка сервера резервного копирования
+  hosts: backup_server
+  become: yes
+  tasks:
+    - name: Создание раздела на диске /dev/sdb
+      community.general.parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+        label: gpt
+
+    - name: Форматирование диска в EXT4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/sdb1
+
+    - name: Монтирование диска в /var/backup
+      mount:
+        path: /var/backup
+        src: /dev/sdb1
+        fstype: ext4
+        state: mounted
+
+    - name: Создание пользователя borg
+      user:
+        name: borg
+        shell: /bin/bash
+        home: /home/borg
+        create_home: yes
+
+    - name: Создание директории .ssh для пользователя borg
+      file:
+        path: /home/borg/.ssh
+        state: directory
+        owner: borg
+        group: borg
+        mode: '0700'
+
+    - name: Установка прав доступа на директорию бэкапов
+      file:
+        path: /var/backup
+        owner: borg
+        group: borg
+        mode: '0700'
+        state: directory
+
+    - name: Настройка SSH для аутентификации по ключам
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+      notify: restart sshd
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted
+
+- name: Настройка клиента
+  hosts: client
+  become: yes
+  vars:
+    server_ip: "192.168.56.10"
+    repo_path: "borg@{{ server_ip }}:/var/backup/client_etc"
+    borg_pass: "Otus1234"
+
+  tasks:
+    - name: Включение PubkeyAuthentication на стороне клиента
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+      notify: перезапуск sshd
+
+    - name: Генерация SSH-ключа для пользователя root
+      openssh_keypair:
+        path: /root/.ssh/id_rsa
+        type: rsa
+        size: 2048
+      register: client_key
+
+    - name: Добавление ключа клиента в authorized_keys на сервере
+      delegate_to: backup_server
+      authorized_key:
+        user: borg
+        key: "{{ client_key.public_key }}"
+
+    - name: Проверка наличия сервера в known_hosts
+      shell: "ssh-keygen -F {{ server_ip }}"
+      register: check_host
+      failed_when: false
+      changed_when: false
+
+    - name: Сканирование SSH-ключа сервера (ssh-keyscan)
+      shell: "ssh-keyscan -H {{ server_ip }} >> /root/.ssh/known_hosts"
+      when: check_host.rc != 0
+
+    - name: Проверка наличия директории .ssh у пользователя vagrant
+      file:
+        path: /home/vagrant/.ssh
+        state: directory
+        mode: '0700'
+        owner: vagrant
+        group: vagrant
+
+    - name: Копирование ключа id_rsa пользователю vagrant (опционально)
+      copy:
+        src: /root/.ssh/id_rsa
+        dest: /home/vagrant/.ssh/id_rsa
+        remote_src: yes
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+
+    - name: Инициализация репозитория Borg
+      environment:
+        BORG_PASSPHRASE: "{{ borg_pass }}"
+      command: "borg init --encryption=repokey {{ repo_path }}"
+      register: borg_init
+      failed_when:
+        - borg_init.rc != 0
+        - "'already exists' not in borg_init.stderr"
+      changed_when: "borg_init.rc == 0"
+
+    - name: Создание Systemd сервиса для бэкапа
+      copy:
+        dest: /etc/systemd/system/borg-backup.service
+        content: |
+          [Unit]
+          Description=Borg Backup Service
+          After=network.target
+
+          [Service]
+          Type=oneshot
+          Environment="BORG_PASSPHRASE={{ borg_pass }}"
+          ExecStart=/usr/bin/borg create --stats {{ repo_path }}::etc-%%Y-%%m-%%d_%%H:%%M:%%S /etc
+          ExecStart=/usr/bin/borg prune --keep-daily 90 {{ repo_path }}
+          StandardOutput=journal
+          StandardError=journal
+
+    - name: Создание Systemd таймера (каждые 5 минут)
+      copy:
+        dest: /etc/systemd/system/borg-backup.timer
+        content: |
+          [Unit]
+          Description=Run Borg Backup every 5 minutes
+
+          [Timer]
+          OnBootSec=1min
+          OnUnitActiveSec=5min
+
+          [Install]
+          WantedBy=timers.target
+
+    - name: Запуск и включение таймера бэкапа
+      systemd:
+        name: borg-backup.timer
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+  handlers:
+    - name: перезапуск sshd
+      systemd:
+        name: sshd
+        state: restarted

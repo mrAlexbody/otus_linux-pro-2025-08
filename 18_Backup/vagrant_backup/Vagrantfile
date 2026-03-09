@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "almalinux/9"
+  config.ssh.host = "127.0.0.1"  
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+ 
+  # Общие настройки провайдера
+  config.vm.provider "virtualbox" do |v|
+    v.customize ["modifyvm", :id, "--hwvirtex", "on"]
+    v.memory = 4096
+    v.cpus = 4
+  end
+
+  config.vm.provision "shell", inline: "dnf install -y python3 nano curl wget"
+
+  # Машина Backup Server
+  config.vm.define "backup_server" do |bs|
+    bs.vm.hostname = "backup-server"
+    bs.vm.network "private_network", ip: "192.168.56.10"
+    bs.vm.disk :disk, size: "2GB", name: "backup_storage"
+  end
+
+  # Машина Client
+  config.vm.define "client" do |c|
+    c.vm.hostname = "client"
+    c.vm.network "private_network", ip: "192.168.56.11"
+  end
+
+  # Provision Ansible
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.groups = {
+      "backup_server" => ["backup_server"],
+      "client"        => ["client"]
+    }
+  end
+end

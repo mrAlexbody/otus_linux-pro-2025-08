@@ -1,0 +1,29 @@
+#!/bin/bash
+export BORG_PASSPHRASE="{{ borg_pass }}"
+export BORG_RSH="ssh -o StrictHostKeyChecking=no"
+REPO="{{ repo_path }}"
+LOG_TAG="borg-backup"
+
+# Весь вывод  в logger с тегом
+exec > >(logger -t "$LOG_TAG") 2>&1
+
+echo "Starting Borg backup of /etc"
+
+# Создание backup'а с именем, содержащим дату и время
+if borg create --stats --compression lz4 \
+    "$REPO::etc-{now:%Y-%m-%d_%H:%M:%S}" \
+    /etc
+then
+    echo "Backup successfully created. Pruning old archives..."
+
+# Удаление старых backup'ов согласно политике хранения
+    borg prune --stats --list \
+        --keep-daily 90 \
+        --keep-monthly 12 \
+        "$REPO"
+    echo "Prune finished."
+else
+    echo "Backup failed, prune skipped."
+    exit 1
+fi
+
