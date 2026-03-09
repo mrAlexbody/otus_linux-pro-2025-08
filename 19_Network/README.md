@@ -42,8 +42,8 @@
 
 ```mermaid
 graph TD
-    Office1 --> Central{Office1}
-    Office2 --> Central{Office2}
+    Office1 --> Central
+    Office2 --> Central
     Central --> IRouter{IRouter}
     IRouter --> [Internet]
 ```
