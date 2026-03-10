@@ -1,0 +1,54 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Enable IPv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        state: present
+
+- hosts: inetRouter
+  tasks:
+    - name: Set route to internal networks via centralRouter
+      command: ip route replace 192.168.0.0/16 via 192.168.255.2
+    - name: Enable NAT (Masquerade) on external interface
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: enp0s3
+        jump: MASQUERADE
+
+- hosts: centralRouter
+  tasks:
+    - name: Set default gateway via inetRouter
+      command: ip route replace default via 192.168.255.1
+    - name: Route to Office 1
+      command: ip route replace 192.168.2.0/24 via 192.168.255.10
+    - name: Route to Office 2
+      command: ip route replace 192.168.1.0/24 via 192.168.255.6
+
+- hosts: office1Router
+  tasks:
+    - name: Set default gateway via centralRouter
+      command: ip route replace default via 192.168.255.9
+
+- hosts: office2Router
+  tasks:
+    - name: Set default gateway via centralRouter
+      command: ip route replace default via 192.168.255.5
+
+- hosts: office1Server
+  tasks:
+    - name: Set default gateway via office1Router
+      command: ip route replace default via 192.168.2.129
+
+- hosts: office2Server
+  tasks:
+    - name: Set default gateway via office2Router
+      command: ip route replace default via 192.168.1.1
+
+- hosts: centralServer
+  tasks:
+    - name: Set default gateway via centralRouter
+      command: ip route replace default via 192.168.0.1
