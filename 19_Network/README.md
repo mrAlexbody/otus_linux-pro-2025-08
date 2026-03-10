@@ -100,65 +100,50 @@ _P.S: Формат сдачи ДЗ - vagrant + ansible_
 ### Схема сети:
 ```mermaid
 graph TD
-    Internet((Internet)) --- inetRouter[inetRouter]
+    Internet --- inetR[inetRouter]
+    inetR -- .255.0/30 -- centralR[centralRouter]
     
-    subgraph Transit_Zone
-        inetRouter -- "192.168.255.0/30" --- centralRouter[centralRouter]
-    end
-
-    subgraph Central_Office
-        centralRouter --- centralServer[centralServer]
-        centralRouter -.-> C_Info("192.168.0.2/28")
-    end
-
-    centralRouter -- "192.168.255.8/30" --- office1Router[office1Router]
-    centralRouter -- "192.168.255.4/30" --- office2Router[office2Router]
-
-    subgraph Office1
-        office1Router --- managersNet(managers-net)
-        managersNet --- office1Server[office1Server]
-        office1Server -.-> O1_IP("192.168.2.130/26")
-    end
-
-    subgraph Office2
-        office2Router --- dev2Net(dev2-net)
-        dev2Net --- office2Server[office2Server]
-        office2Server -.-> O2_IP("192.168.1.2/25")
-    end
-
------>
+    centralR -- .0.0/28 -- centralS[centralServer]
+    centralR -- .255.8/30 -- off1R[office1Router]
+    centralR -- .255.4/30 -- off2R[office2Router]
+    
+    off1R -- .2.128/26 -- off1S[office1Server]
+    off2R -- .1.0/25 -- off2S[office2Server]
 ```
 ### Таблица интерфейсов и IP-адресов устройств
 
+| Узел | Интерфейс | IP/Маска | Назначение | Gateway (Шлюз) |
+|---|---|---|---|---|
+| inetRouter | enp0s8 | 192.168.255.1/30 | Transit to Central | 10.0.2.2 (NAT) |
+| centralRouter | enp0s8 | 192.168.255.2/30 | Transit to Inet | 192.168.255.1 |
+| | enp0s12 | 192.168.255.9/30 | Link to Office 1 | — |
+| | enp0s13 | 192.168.255.5/30 | Link to Office 2 | — |
+| | enp0s9 | 192.168.0.1/28 | Central LAN | — |
+| office1Router | enp0s8 | 192.168.255.10/30 | Link to Central | 192.168.255.9 |
+| | enp0s11 | 192.168.2.129/26 | Managers LAN | — |
+| office2Router | enp0s8 | 192.168.255.6/30 | Link to Central | 192.168.255.5 |
+| | enp0s9 | 192.168.1.1/25 | Dev2 LAN | — |
 
-| Хост | Интерфейс | IP/маска | Назначение |
-| :--- | :--- | :--- | :--- |
-| **inetRouter** | enp0s3 | DHCP (NAT) | Выход в интернет (Vagrant NAT) |
-| | enp0s8 | 192.168.255.1/30 | Транзит до centralRouter |
-| | enp0s9 | 192.168.56.10/24 | Управление (Ansible MNGT) |
-| **centralRouter** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.255.2/30 | Транзит до inetRouter |
-| | enp0s9 | 192.168.0.1/28 | Сеть directors |
-| | enp0s10 | 192.168.255.9/30 | Транзит к office1Router |
-| | enp0s16 | 192.168.255.5/30 | Транзит к office2Router |
-| | enp0s17 | 192.168.56.11/24 | Управление (Ansible MNGT) |
-| **centralServer** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.0.2/28 | Сеть directors |
-| | enp0s9 | 192.168.56.12/24 | Управление (Ansible MNGT) |
-| **office1Router** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.255.10/30 | Транзит к centralRouter |
-| | enp0s9 | 192.168.2.129/26 | Сеть managers (LAN) |
-| | enp0s10 | 192.168.56.20/24 | Управление (Ansible MNGT) |
-| **office1Server** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.2.130/26 | Сеть managers |
-| | enp0s9 | 192.168.56.21/24 | Управление (Ansible MNGT) |
-| **office2Router** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.255.6/30 | Транзит к centralRouter |
-| | enp0s9 | 192.168.1.1/25 | Сеть dev (LAN) |
-| | enp0s10 | 192.168.56.30/24 | Управление (Ansible MNGT) |
-| **office2Server** | enp0s3 | DHCP (NAT) | Служебный (Vagrant NAT) |
-| | enp0s8 | 192.168.1.2/25 | Сеть dev |
-| | enp0s9 | 192.168.56.31/24 | Управление (Ansible MNGT) |
+**Конечные узлы (Endpoints)**
+
+* centralServer: 192.168.0.2/28 → GW: 192.168.0.1
+* office1Server: 192.168.2.130/26 → GW: 192.168.2.129
+* office2Server: 192.168.1.2/25 → GW: 192.168.1.1
+
+**Статические маршруты (Routing Table)**
+
+   1. **centralRouter:**
+   * 192.168.2.0/24 via 192.168.255.10 (Office 1)
+      * 192.168.1.0/24 via 192.168.255.6 (Office 2)
+      * 0.0.0.0/0 via 192.168.255.1 (Internet)
+   2. **inetRouter:**
+   * 192.168.0.0/16 via 192.168.255.2 (Internal Back-route)
+      * iptables **NAT (MASQUERADE)** on enp0s3
+   
+------------------------------
+Нужно ли добавить в эту спецификацию список портов и сервисов (Firewall) для Ansible?
+
+
 
 ### Конфигурационные файлы
 - [Vagrantfile](vagrant_network/Vagrantfile)
