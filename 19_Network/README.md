@@ -126,12 +126,6 @@ graph TD
         office2Server -.-> O2_IP("192.168.1.2/25")
     end
 
-    %% Стилизация
-    style Internet fill:#f9f,stroke:#333
-    style centralRouter fill:#bbf,stroke:#333
-    style office1Router fill:#dfd,stroke:#333
-    style office2Router fill:#dfd,stroke:#333
-
 ```
 ### Таблица интерфейсов и IP-адресов устройств
 
