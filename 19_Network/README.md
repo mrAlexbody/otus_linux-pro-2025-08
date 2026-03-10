@@ -99,17 +99,16 @@ _P.S: Формат сдачи ДЗ - vagrant + ansible_
 
 ### Схема сети:
 ```mermaid
-ggraph TD
-    Internet -- inetR[inetRouter]
-    inetR -- "192.168.255.0/30" -- centralR[centralRouter]
+graph TD
+    Internet --- inetR[inetRouter]
+    inetR ---| "192.168.255.0/30" |--- centralR[centralRouter]
     
-    centralR -- "192.168.0.0/28" -- centralS[centralServer]
-    centralR -- "192.168.255.8/30" -- off1R[office1Router]
-    centralR -- "192.168.255.4/30" -- off2R[office2Router]
+    centralR ---| "192.168.0.0/28" |--- centralS[centralServer]
+    centralR ---| "192.168.255.8/30" |--- off1R[office1Router]
+    centralR ---| "192.168.255.4/30" |--- off2R[office2Router]
     
-    off1R -- "192.168.2.128/26" -- off1S[office1Server]
-    off2R -- "192.168.1.0/25" -- off2S[office2Server]
-
+    off1R ---| "192.168.2.128/26" |--- off1S[office1Server]
+    off2R ---| "192.168.1.0/25" |--- off2S[office2Server]
 ```
 ### Таблица интерфейсов и IP-адресов устройств
 
