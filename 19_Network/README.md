@@ -100,7 +100,7 @@ _P.S: Формат сдачи ДЗ - vagrant + ansible_
 ### Схема сети:
 ```mermaid
 ggraph TD
-    Internet --- inetR[inetRouter]
+    Internet -- inetR[inetRouter]
     inetR -- "192.168.255.0/30" -- centralR[centralRouter]
     
     centralR -- "192.168.0.0/28" -- centralS[centralServer]
