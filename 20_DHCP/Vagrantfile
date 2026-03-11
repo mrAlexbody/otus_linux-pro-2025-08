@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+ENV["VAGRANT_SERVER_URL"] = "https://vagrant.elab.pro"
+
+Vagrant.configure("2") do |config|
+  config.ssh.host = "127.0.0.1"
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+  end
+
+  config.vm.define "pxeserver" do |server|
+    server.vm.box = "ubuntu/22.04"
+    server.vm.host_name = "pxeserver"    
+    server.vm.network "forwarded_port", guest: 80, host: 8080
+    
+    # PXE сеть (внутренняя)
+    server.vm.network :private_network, ip: "10.0.0.20", virtualbox__intnet: "pxenet", adapter: 2
+    # Управление (Host-only)
+    server.vm.network :private_network, ip: "192.168.56.10", adapter: 3
+    
+    server.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.cpus = 2
+    end
+    
+    # Включаем NAT и Forwarding
+    server.vm.provision "shell", inline: <<-SHELL
+      sysctl -w net.ipv4.ip_forward=1
+      echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+      EXT_IF=$(ip route | grep default | awk '{print $5}' | head -n1)
+      iptables -t nat -A POSTROUTING -o $EXT_IF -j MASQUERADE
+    SHELL
+    
+    server.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/playbook.yml"
+      ansible.host_key_checking = "false"
+      ansible.limit = "pxeserver"
+    end
+  end
+
+  config.vm.define "pxeclient" do |pxeclient|
+    pxeclient.vm.box = "ubuntu/22.04"
+    pxeclient.vm.host_name = "pxeclient"
+
+    # Управление (Host-only)
+    pxeclient.vm.network :private_network, ip: "192.168.56.11", adapter: 3
+
+    # PXE сеть (внутренняя)
+    pxeclient.vm.network "private_network", type: "dhcp", virtualbox__intnet: "pxenet", adapter: 1
+
+    pxeclient.vm.provider :virtualbox do |vb|
+      vb.gui = true
+      vb.memory = "4096"
+      vb.cpus = 2
+
+      # Настройка первого адаптера во внутреннюю сеть
+      vb.customize ["modifyvm", :id, "--nic1", "intnet"]
+      vb.customize ["modifyvm", :id, "--intnet1", "pxenet"]
+      
+      # Порядок загрузки
+      vb.customize ["modifyvm", :id, "--boot1", "disk"]
+      vb.customize ["modifyvm", :id, "--boot2", "net"]
+      
+      # Удалено: --natchromepriv0 (вызывало ошибку)
+    end
+    
+    pxeclient.vm.boot_timeout = 600 
+  end
+end

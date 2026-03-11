@@ -1,0 +1,164 @@
+---
+- name: Full Auto-Install Setup for Ubuntu 24.04
+  hosts: pxeserver
+  become: yes
+  vars:
+    pxe_ip: "10.0.0.20"
+    iso_dir: "/srv/images"
+    ks_dir: "/srv/ks"
+    iso_name: "noble-live-server-amd64.iso"
+    tftp_root: "/var/lib/tftpboot"
+
+
+  tasks:
+ 
+    - name: Install required packages
+      apt:
+        name: [dnsmasq, apache2, syslinux, pxelinux, p7zip-full, wget]
+        update_cache: yes
+
+    - name: Create directories for ISO, Kickstart and PXE
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      with_items:
+        - "{{ iso_dir }}"
+        - "{{ ks_dir }}"
+        - "{{ tftp_root }}/pxelinux.cfg"
+
+    - name: Copy ISO from local files to server
+      copy:
+        src: "files/{{ iso_name }}"
+        dest: "{{ iso_dir }}/{{ iso_name }}"
+        mode: '0644'
+
+    - name: Configure Apache VirtualHost (ks-server.conf)
+      copy:
+        dest: /etc/apache2/sites-available/ks-server.conf
+        content: |
+          <VirtualHost {{ pxe_ip }}:80>
+              DocumentRoot /
+              <Directory {{ ks_dir }}>
+                  Options Indexes MultiViews
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+              <Directory {{ iso_dir }}>
+                  Options Indexes MultiViews
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+
+    - name: Activate Apache config and disable default
+      shell: |
+        a2ensite ks-server.conf
+        a2dissite 000-default.conf
+      notify: Restart Apache
+
+    - name: Create user-data for Autoinstall
+      copy:
+        dest: "{{ ks_dir }}/user-data"
+        content: |
+          #cloud-config
+          autoinstall:
+            version: 1
+            apt:
+              disable_components: []
+              geoip: true
+              preserve_sources_list: false
+              primary:
+                - arches:
+                    - amd64
+                    - i386
+                  uri: http://us.archive.ubuntu.com/ubuntu
+                - arches:
+                    - default
+                  uri: http://ports.ubuntu.com/ubuntu-ports
+            drivers:
+              install: false
+            identity:
+              hostname: linux
+              password: "$6$yeNVi7Yg4gcap3GU$55Z0QiUYtW9TI3YZ6VnK3CA8AduFYcecGva5frrPRkW1N4xln9XLsdspz4WVe39/CdMwnl43I.5bduwXteLv5/"
+              realname: otus
+              username: otus
+            kernel:
+              package: linux-generic
+            keyboard:
+              layout: us
+              toggle: null
+              variant: ''
+            locale: en_US.UTF-8
+            network:
+              ethernets:
+                enp0s3:
+                  dhcp4: true
+                enp0s8:
+                  dhcp4: true
+              version: 2
+            ssh:
+              allow-pw: true
+              authorized-keys: []
+              install-server: true
+            updates: security
+    
+    - name: Create empty meta-data
+      file:
+        path: "{{ ks_dir }}/meta-data"
+        state: touch
+
+    - name: Extract Kernel and Initrd from ISO
+      shell: |
+        7z e {{ iso_dir }}/{{ iso_name }} -o/tmp/extract casper/vmlinuz casper/initrd -y
+        mv /tmp/extract/vmlinuz {{ tftp_root }}/linux
+        mv /tmp/extract/initrd {{ tftp_root }}/initrd
+        rm -rf /tmp/extract
+      args:
+        creates: "{{ tftp_root }}/linux"
+
+    - name: Copy SYSLINUX modules to TFTP
+      copy:
+        src: "{{ item }}"
+        dest: "{{ tftp_root }}/"
+        remote_src: yes
+      with_items:
+        - /usr/lib/PXELINUX/pxelinux.0
+        - /usr/lib/syslinux/modules/bios/ldlinux.c32
+        - /usr/lib/syslinux/modules/bios/libutil.c32
+        - /usr/lib/syslinux/modules/bios/menu.c32
+
+    - name: Configure PXE Default Menu
+      copy:
+        dest: "{{ tftp_root }}/pxelinux.cfg/default"
+        content: |
+          DEFAULT install
+          LABEL install
+            KERNEL linux
+            INITRD initrd
+            APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://{{ pxe_ip }}{{ iso_dir }}/{{ iso_name }} autoinstall ds=nocloud-net;s=http://{{ pxe_ip }}{{ ks_dir }}/
+
+    - name: Configure DNSMASQ (DHCP/TFTP)
+      copy:
+        dest: /etc/dnsmasq.conf
+        content: |
+          port=0
+          interface=enp0s8
+          bind-dynamic
+          dhcp-range=10.0.0.50,10.0.0.100,255.255.255.0,24h
+          dhcp-option=3,10.0.0.20
+          dhcp-option=6,8.8.8.8
+          dhcp-boot=pxelinux.0
+          enable-tftp
+          tftp-root={{ tftp_root }}
+
+    - name: Final Service Restart
+      service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items: [dnsmasq, apache2]
+
+  handlers:
+    - name: Restart Apache
+      service: name=apache2 state=restarted
