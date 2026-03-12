@@ -1,0 +1,76 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/22.04"
+  config.ssh.host = "127.0.0.1"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+    vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+  end
+ 
+  config.vm.provision "shell", inline: <<-SHELL
+    sysctl -w net.ipv4.ip_forward=1
+    echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+	echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4
+	export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y 
+	apt-get install -y traceroute
+  SHELL
+
+  MACHINES = {
+    "inetRouter" => [
+      {ip: "192.168.255.1", mask: "255.255.255.252", intnet: "router-net"}
+    ],
+    "inetRouter2" => [
+      {ip: "192.168.255.13", mask: "255.255.255.252", intnet: "router2-net"}
+    ],
+    "centralRouter" => [
+      {ip: "192.168.255.2", mask: "255.255.255.252", intnet: "router-net"},
+      {ip: "192.168.255.14", mask: "255.255.255.252", intnet: "router2-net"},
+      {ip: "192.168.0.1",   mask: "255.255.255.240", intnet: "dir-net"},
+      {ip: "192.168.255.9", mask: "255.255.255.252", intnet: "office1-central"},
+      {ip: "192.168.255.5", mask: "255.255.255.252", intnet: "office2-central"}
+    ],
+    "centralServer" => [
+      {ip: "192.168.0.2",   mask: "255.255.255.240", intnet: "dir-net"}
+    ],
+    "office1Router" => [
+      {ip: "192.168.255.10", mask: "255.255.255.252", intnet: "office1-central"},
+      {ip: "192.168.2.129",  mask: "255.255.255.192", intnet: "managers-net"}
+    ],
+    "office1Server" => [
+      {ip: "192.168.2.130", mask: "255.255.255.192", intnet: "managers-net"}
+    ],
+    "office2Router" => [
+      {ip: "192.168.255.6",  mask: "255.255.255.252", intnet: "office2-central"},
+      {ip: "192.168.1.1",    mask: "255.255.255.128", intnet: "dev2-net"}
+    ],
+    "office2Server" => [
+      {ip: "192.168.1.2",   mask: "255.255.255.128", intnet: "dev2-net"}
+    ]
+  }
+
+  MACHINES.each do |name, interfaces|
+    config.vm.define name do |node|
+      node.vm.hostname = name
+      interfaces.each do |iface|
+        node.vm.network "private_network", 
+          ip: iface[:ip], 
+          netmask: iface[:mask], 
+          virtualbox__intnet: iface[:intnet]
+      end
+      
+      if name == "inetRouter2"
+        node.vm.network "forwarded_port", guest: 8080, host: 8080
+      end
+
+      node.vm.provision "ansible" do |ansible|
+        ansible.playbook = "ansible/playbook.yml"
+        ansible.become = true
+        ansible.compatibility_mode = "2.0"
+      end
+    end
+  end
+end

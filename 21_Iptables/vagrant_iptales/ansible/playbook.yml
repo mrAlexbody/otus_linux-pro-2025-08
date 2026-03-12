@@ -1,0 +1,254 @@
+---
+# Базовые настройки для всех хостов
+- hosts: all
+  become: yes
+  tasks:
+    - name: Basic system setup
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        state: present
+
+    - name: Install networking tools
+      apt:
+        name:
+          - nginx
+          - knockd
+          - iptables-persistent
+          - curl
+          - traceroute
+          - openssh-server
+        state: present
+        update_cache: yes
+
+    - name: Configure SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin yes' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication yes' }
+      notify: restart ssh
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
+
+# Генерация SSH-ключа на centralRouter 
+- hosts: centralRouter
+  become: yes
+  tasks:
+    - name: Ensure .ssh directory exists for vagrant
+      file:
+        path: /home/vagrant/.ssh
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0700'
+
+    - name: Generate SSH key for vagrant user
+      openssh_keypair:
+        path: /home/vagrant/.ssh/id_rsa
+        type: rsa
+        size: 2048
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+      register: cr_key
+
+# Распространение публичного ключа на все ВМ
+- hosts: all
+  become: yes
+  tasks:
+    - name: Deploy centralRouter public key to all hosts
+      authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ hostvars['centralRouter']['cr_key']['public_key'] }}"
+      when: hostvars['centralRouter']['cr_key']['public_key'] is defined
+
+# Настройка inetRouter (port knocking)
+- hosts: inetRouter
+  become: yes
+  tasks:
+    - name: Install iptables-persistent to save rules
+      apt:
+        name: iptables-persistent
+        state: present
+        update_cache: yes
+
+    - name: Reset old SSH rules from centralRouter
+      shell: |
+        iptables-save | grep -v "192.168.255.2.*dport 22" | iptables-restore
+      changed_when: false
+
+    - name: Insert DROP rule first
+      iptables:
+        chain: INPUT
+        source: 192.168.255.2
+        protocol: tcp
+        destination_port: 22
+        jump: DROP
+        rule_num: "1"
+  
+    - name: Configure knockd
+      copy:
+        dest: /etc/knockd.conf
+        content: |
+          [options]
+             UseSyslog
+          [openSSH]
+             sequence    = 7000,8000,9000
+             seq_timeout = 5
+             command     = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j DROP; /sbin/iptables -I INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+             tcpflags    = syn
+          [closeSSH]
+             sequence    = 9000,8000,7000
+             seq_timeout = 5
+             command     = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT; /sbin/iptables -I INPUT -s %IP% -p tcp --dport 22 -j DROP
+             tcpflags    = syn
+      notify: restart knockd
+ 
+    - name: Save "iptables"
+      shell: netfilter-persistent save
+      when: ansible_os_family == "Debian"
+     
+    - name: Set knockd to listen on enp0s8
+      lineinfile:
+        path: /etc/default/knockd
+        regexp: "{{ item.re }}"
+        line: "{{ item.line }}"
+      loop:
+        - { re: '^START_KNOCKD=', line: 'START_KNOCKD=1' }
+        - { re: '^KNOCKD_OPTS=', line: 'KNOCKD_OPTS="-i enp0s8"' }
+      notify: restart knockd
+
+    - name: Firewall - DROP SSH from CentralRouter
+      iptables:
+        chain: INPUT
+        source: 192.168.255.2
+        protocol: tcp
+        destination_port: 22
+        jump: DROP
+
+    - name: Route to internal networks
+      command: ip route replace 192.168.0.0/16 via 192.168.255.2
+
+  handlers:
+    - name: restart knockd
+      service:
+        name: knockd
+        state: restarted
+
+# Настройка centralRouter (клиент knock, маршруты, скрипт)
+- hosts: centralRouter
+  become: yes
+  tasks:
+    - name: Install knock client
+      apt:
+        name: knockd
+        state: present
+        update_cache: yes
+
+    - name: Set routes
+      shell: |
+        ip route replace default via 192.168.255.1
+        ip route replace 192.168.2.0/24 via 192.168.255.10
+        ip route replace 192.168.1.0/24 via 192.168.255.6
+
+    - name: Knock script
+      copy:
+        dest: /usr/local/bin/knock_inet.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          TARGET="${1:-192.168.255.1}"
+          knock $TARGET 7000 8000 9000
+          ssh -i ~/.ssh/id_rsa -o ConnectTimeout=5 -o StrictHostKeyChecking=no vagrant@$TARGET
+
+# centralServer – установка Nginx и маршрут по умолчанию
+- hosts: centralServer
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Set default gateway via centralRouter
+      command: ip route replace default via 192.168.0.1
+
+# inetRouter2 настройка маршрутизации, DNAT и MASQUERADE
+- hosts: inetRouter2
+  become: yes
+  tasks:
+    - name: Install iptables-persistent
+      apt:
+        name: iptables-persistent
+        state: present
+        update_cache: yes
+
+    - name: Set default gateway via centralRouter
+      command: ip route replace default via 192.168.255.14
+
+    - name: Route to Central Server
+      command: ip route replace 192.168.0.0/24 via 192.168.255.14
+
+    - name: Port Forwarding 8080 -> 80 (DNAT)
+      iptables:
+        table: nat
+        chain: PREROUTING
+        protocol: tcp
+        destination_port: 8080
+        jump: DNAT
+        to_destination: 192.168.0.2:80
+
+    - name: Masquerade traffic from centralServer
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        source: 192.168.0.2
+        jump: MASQUERADE
+
+    - name: Save iptables rules
+      shell: netfilter-persistent save
+      when: ansible_os_family == "Debian"
+
+# Маршруты для офисных роутеров и серверов
+- hosts: office1Router
+  become: yes
+  tasks:
+    - command: ip route replace default via 192.168.255.9
+
+- hosts: office2Router
+  become: yes
+  tasks:
+    - command: ip route replace default via 192.168.255.5
+
+- hosts: office1Server
+  become: yes
+  tasks:
+    - command: ip route replace default via 192.168.2.129
+
+- hosts: office2Server
+  become: yes
+  tasks:
+    - command: ip route replace default via 192.168.1.1
+
+# Проверка маршрутов
+- hosts: all
+  become: yes
+  tasks:
+    - name: Show default route
+      command: ip route show default
+      register: route_output
+      changed_when: false
+      failed_when: false
+
+    - name: Debug default route
+      debug:
+        msg: "{{ inventory_hostname }} default route: {{ route_output.stdout }}"
