@@ -84,7 +84,7 @@ graph TD
 ### Проверка
 >  Проверка Port Knocking
 >> Убедиться, что SSH на inetRouter закрыт и открывается только после «стука».
-```mermaid
+```shell
 amyskin@otus-vagrant:/mnt/c/Vagrant/vagrant_iptables$ vagrant ssh centralRouter
 Welcome to Ubuntu 22.04.2 LTS (GNU/Linux 5.15.0-71-generic x86_64)
 
