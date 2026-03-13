@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ENV["VAGRANT_SERVER_URL"] = "https://vagrant.elab.pro"
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/22.04" # Ubuntu 22.04 LTS
+  config.ssh.host = "127.0.0.1"
+  # Общие настройки для всех машин
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+    v.cpus = 1
+  end
+
+  # 1. ROUTER (Gateway & Firewall)
+  config.vm.define "router" do |router|
+    router.vm.hostname = "router"
+    router.vm.network "private_network", ip: "192.168.56.10" # Management
+    router.vm.network "private_network", ip: "10.0.1.1", virtualbox__intnet: "dmz_net"
+    router.vm.network "private_network", ip: "10.0.2.1", virtualbox__intnet: "internal_net"
+
+    # Проброс портов для доступа к Zabbix и PowerDNS-Admin через Router
+    router.vm.network "forwarded_port", guest: 443, host: 8443
+    router.vm.network "forwarded_port", guest: 53, host: 1053, protocol: "udp"
+  end
+
+  # 2. NS01 (PowerDNS + Frontend)
+  config.vm.define "ns01" do |ns|
+    ns.vm.hostname = "ns01"
+    ns.vm.network "private_network", ip: "192.168.56.11"
+    ns.vm.network "private_network", ip: "10.0.1.11", virtualbox__intnet: "dmz_net"
+  end
+
+  # 3. DB01 (Postgres + Patroni)
+  config.vm.define "db01" do |db|
+    db.vm.hostname = "db01"
+    db.vm.network "private_network", ip: "192.168.56.21"
+    db.vm.network "private_network", ip: "10.0.2.21", virtualbox__intnet: "internal_net"
+    db.vm.provider "virtualbox" do |v|
+      v.memory = 2048
+    end
+  end
+
+  # 4. DB02 (Postgres + Patroni)
+  config.vm.define "db02" do |db|
+    db.vm.hostname = "db02"
+    db.vm.network "private_network", ip: "192.168.56.22"
+    db.vm.network "private_network", ip: "10.0.2.22", virtualbox__intnet: "internal_net"
+    db.vm.provider "virtualbox" do |v|
+      v.memory = 2048
+    end
+  end
+
+  # 5. MGMT (Zabbix, LDAP, Backups)
+  config.vm.define "mgmt" do |mgmt|
+    mgmt.vm.hostname = "mgmt"
+    mgmt.vm.network "private_network", ip: "192.168.56.30"
+    mgmt.vm.network "private_network", ip: "10.0.2.30", virtualbox__intnet: "internal_net"
+    mgmt.vm.provider "virtualbox" do |v|
+      v.memory = 2048 # Zabbix Java Gateway / Server
+    end
+  end
+
+  # Запуск Ansible (Provisioning)
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/site.yml"
+    ansible.inventory_path = "ansible/inventory.ini"
+    ansible.limit = "all"
+  end
+end
