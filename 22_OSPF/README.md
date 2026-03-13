@@ -28,9 +28,9 @@ _P.S. Формат сдачи: Vagrantfile + ansible_
 
 ```mermaid
 graph TD
-    R1["🌐 <b>router1</b><br/>192.168.10.1/24<br/>Ansible: 192.168.50.10"]
-    R2["🌐 <b>router2</b><br/>192.168.20.1/24<br/>Ansible: 192.168.50.11"]
-    R3["🌐 <b>router3</b><br/>192.168.30.1/24<br/>Ansible: 192.168.50.12"]
+    R1["🌐 <b>router1</b><br/>192.168.10.1/24<br/>Ansible: 192.168.56.10"]
+    R2["🌐 <b>router2</b><br/>192.168.20.1/24<br/>Ansible: 192.168.56.11"]
+    R3["🌐 <b>router3</b><br/>192.168.30.1/24<br/>Ansible: 192.168.56.12"]
 
     R3 ---|10.0.12.0/30| R1
     R3 ---|10.0.11.0/30| R2
@@ -41,20 +41,20 @@ graph TD
 
 > Таблица со всеми интерфейсами, включая L3-линки между роутерами и Management-сеть для Ansible
 
-| Устройство | Интерфейс | IP-адрес | Назначение |
-|---|---|---|---|
-| router1 | eth0 (mgmt) | 192.168.50.10/24 | Ansible Management |
-| | eth1 (lan) | 192.168.10.1/24 | Локальная сеть (net1) |
-| | eth2 (wan) | 10.0.10.1/30 | Линк к router2 |
-| | eth3 (wan) | 10.0.12.2/30 | Линк к router3 |
-| router2 | eth0 (mgmt) | 192.168.50.11/24 | Ansible Management |
-| | eth1 (lan) | 192.168.20.1/24 | Локальная сеть (net2) |
-| | eth2 (wan) | 10.0.10.2/30 | Линк к router1 |
-| | eth3 (wan) | 10.0.11.2/30 | Линк к router3 |
-| router3 | eth0 (mgmt) | 192.168.50.12/24 | Ansible Management |
-| | eth1 (lan) | 192.168.30.1/24 | Локальная сеть (net3) |
-| | eth2 (wan) | 10.0.11.1/30 | Линк к router2 |
-| | eth3 (wan) | 10.0.12.1/30 | Линк к router1 |
+| Устройство | Интерфейс | IP-адрес         | Назначение |
+|---|---|------------------|---|
+| router1 | eth0 (mgmt) | 192.168.56.10/24 | Ansible Management |
+| | eth1 (lan) | 192.168.10.1/24  | Локальная сеть (net1) |
+| | eth2 (wan) | 10.0.10.1/30     | Линк к router2 |
+| | eth3 (wan) | 10.0.12.2/30     | Линк к router3 |
+| router2 | eth0 (mgmt) | 192.168.56.11/24 | Ansible Management |
+| | eth1 (lan) | 192.168.20.1/24  | Локальная сеть (net2) |
+| | eth2 (wan) | 10.0.10.2/30     | Линк к router1 |
+| | eth3 (wan) | 10.0.11.2/30     | Линк к router3 |
+| router3 | eth0 (mgmt) | 192.168.56.12/24 | Ansible Management |
+| | eth1 (lan) | 192.168.30.1/24  | Локальная сеть (net3) |
+| | eth2 (wan) | 10.0.11.1/30     | Линк к router2 |
+| | eth3 (wan) | 10.0.12.1/30     | Линк к router1 |
 
 ### Конфигурационные файлы
 - [Vagrantfile]()
