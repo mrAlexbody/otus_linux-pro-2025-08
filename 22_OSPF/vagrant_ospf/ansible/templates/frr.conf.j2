@@ -1,0 +1,91 @@
+!frr version 8.1
+!frr defaults traditional
+!
+hostname {{ ansible_hostname }}
+log syslog informational
+no ipv6 forwarding
+service integrated-vtvsh-config
+!
+{% if ansible_hostname == 'router1' %}
+interface {{ int_net1 }}
+ description net_router1
+ ip address 192.168.10.1/24
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+interface {{ int_r1r2 }}
+ description r1-r2
+ ip address 10.0.10.1/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+ ip ospf cost 1000   {# всегда дорогой #}
+!
+interface {{ int_r1r3 }}
+ description r1-r3
+ ip address 10.0.12.2/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+{% elif ansible_hostname == 'router2' %}
+interface {{ int_net2 }}
+ description net_router2
+ ip address 192.168.20.1/24
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+interface {{ int_r2r1 }}
+ description r2-r1
+ ip address 10.0.10.2/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+{% if symmetric_routing | bool %} ip ospf cost 1000{% else %} !ip ospf cost 1000{% endif %}
+!
+interface {{ int_r2r3 }}
+ description r2-r3
+ ip address 10.0.11.2/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+{% elif ansible_hostname == 'router3' %}
+interface {{ int_net3 }}
+ description net_router3
+ ip address 192.168.30.1/24
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+interface {{ int_r3r2 }}
+ description r3-r2
+ ip address 10.0.11.1/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+interface {{ int_r3r1 }}
+ description r3-r1
+ ip address 10.0.12.1/30
+ ip ospf mtu-ignore
+ ip ospf hello-interval 10
+ ip ospf dead-interval 30
+!
+{% endif %}
+!
+router ospf
+ router-id {{ router_id }}
+ network 10.0.10.0/30 area 0
+ network 10.0.11.0/30 area 0
+ network 10.0.12.0/30 area 0
+ network 192.168.10.0/24 area 0
+ network 192.168.20.0/24 area 0
+ network 192.168.30.0/24 area 0
+ log file /var/log/frr/frr.log
+ default-information originate always
+!
+line vty
+!

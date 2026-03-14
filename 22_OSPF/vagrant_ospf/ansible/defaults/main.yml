@@ -1,0 +1,3 @@
+# symmetric_routing: false  – асимметричный режим 
+# symmetric_routing: true   – симметричный режим 
+symmetric_routing: true
