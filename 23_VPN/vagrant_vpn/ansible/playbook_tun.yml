@@ -1,0 +1,190 @@
+---
+- name: "Базовая подготовка всех ВМ"
+  hosts: all
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: "Обновление кеша пакетов"
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: "Установка необходимых пакетов"
+      apt:
+        name:
+          - openvpn
+          - iperf3
+          - easy-rsa
+          - traceroute
+          - tcpdump
+          - net-tools
+          - curl
+        state: present
+
+- name: "Очистка старых конфигураций"
+  hosts: all
+  become: yes
+  tasks:
+    - name: "Остановка всех сервисов OpenVPN"
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop: [openvpn@server-tun, openvpn@client-tun, openvpn@server-tap, openvpn@client-tap]
+      ignore_errors: yes
+
+    - name: "Удаление старых файлов"
+      file:
+        path: "/etc/openvpn/{{ item }}"
+        state: absent
+      loop: [server-tun.conf, client-tun.conf, static.key, server-tap.conf, client-tap.conf]
+
+- name: "Настройка Сервера (TUN + Сертификаты)"
+  hosts: vpn_server
+  become: yes
+  tasks:
+    - name: "Инициализация PKI и CA"
+      shell: |
+        rm -rf pki
+        /usr/share/easy-rsa/easyrsa init-pki
+        echo 'rasvpn' | /usr/share/easy-rsa/easyrsa build-ca nopass
+      args:
+        chdir: /etc/openvpn
+
+    - name: "Генерация DH и сертификатов сервера"
+      shell: |
+        /usr/share/easy-rsa/easyrsa gen-dh
+        echo 'rasvpn' | /usr/share/easy-rsa/easyrsa gen-req server nopass
+        echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req server server
+      args:
+        chdir: /etc/openvpn
+
+    - name: "Генерация сертификата клиента"
+      shell: |
+        echo 'client' | /usr/share/easy-rsa/easyrsa gen-req client nopass
+        echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req client client
+      args:
+        chdir: /etc/openvpn
+
+    - name: "Чтение сертификатов для передачи"
+      slurp:
+        src: "/etc/openvpn/{{ item }}"
+      register: cert_files
+      loop: [pki/ca.crt, pki/issued/client.crt, pki/private/client.key]
+
+    - name: "Сохранение сертификатов в факты"
+      set_fact:
+        client_certs: "{{ client_certs | default({}) | combine({item.item: item.content}) }}"
+      loop: "{{ cert_files.results }}"
+
+    - name: "Подготовка лог-файла"
+      file:
+        path: /var/log/openvpn-tun.log
+        state: touch
+        mode: '0666'
+
+    - name: "Создание конфигурации сервера"
+      copy:
+        dest: /etc/openvpn/server-tun.conf
+        content: |
+          dev tun
+          proto udp
+          port 1207
+          ca /etc/openvpn/pki/ca.crt
+          cert /etc/openvpn/pki/issued/server.crt
+          key /etc/openvpn/pki/private/server.key
+          dh /etc/openvpn/pki/dh.pem
+          server 10.10.20.0 255.255.255.0
+          topology subnet
+          comp-lzo
+          data-ciphers AES-256-GCM:AES-128-GCM
+          data-ciphers-fallback AES-256-CBC
+          keepalive 10 120
+          persist-key
+          persist-tun
+          log /var/log/openvpn-tun.log
+          verb 3
+
+    - name: "Запуск сервера"
+      systemd:
+        name: openvpn@server-tun
+        state: restarted
+        enabled: yes
+    
+    - name: "Запуск iperf3 в фоне"
+      shell: "killall iperf3 || true; iperf3 -s -D"
+      changed_when: false            
+
+- name: "Настройка Клиента"
+  hosts: vpn_client
+  become: yes
+  tasks:
+    - name: "Создание папок для сертификатов"
+      file:
+        path: /etc/openvpn/pki/issued
+        state: directory
+        recurse: yes
+
+    - name: "Раскладка сертификатов"
+      copy:
+        content: "{{ hostvars['server']['client_certs'][item.src] | b64decode }}"
+        dest: "/etc/openvpn/{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: 'pki/ca.crt', dest: 'pki/ca.crt', mode: '0644' }
+        - { src: 'pki/issued/client.crt', dest: 'pki/client.crt', mode: '0644' }
+        - { src: 'pki/private/client.key', dest: 'pki/client.key', mode: '0600' }
+
+    - name: "Создание конфигурации клиента"
+      copy:
+        dest: /etc/openvpn/client-tun.conf
+        content: |
+          client
+          dev tun
+          proto udp
+          remote 192.168.56.10 1207
+          resolv-retry infinite
+          remote-cert-tls server
+          ca /etc/openvpn/pki/ca.crt
+          cert /etc/openvpn/pki/client.crt
+          key /etc/openvpn/pki/client.key
+          data-ciphers AES-256-GCM:AES-128-GCM
+          persist-key
+          persist-tun
+          comp-lzo
+          verb 3
+
+    - name: "Запуск клиенте"
+      systemd:
+        name: openvpn@client-tun
+        state: restarted
+        enabled: yes
+               
+    - name: "Пауза 10 сек."
+      pause:
+        seconds: 10
+
+    - name: "Проверка пинга"
+      command: ping -c 3 10.10.20.1
+      register: ping_tun
+      ignore_errors: yes
+
+    - name: "Замер iperf3 если пинг прошел"
+      shell: iperf3 -c 10.10.20.1 -t 10 > /tmp/iperf_tun.log
+      when: ping_tun.rc == 0
+
+    - name: "Копирование отчета в общую папку"
+      copy:
+        src: /tmp/iperf_tun.log
+        dest: /vagrant/iperf_tun.log
+        remote_src: yes
+      when: ping_tun.rc == 0
+
+    - name: "Диагностика(вот тут я запарился!!! ): почему не работает?"
+      command: tail -n 50 /var/log/openvpn-tun.log
+      delegate_to: server
+      register: server_logs
+      when: ping_tun.rc != 0
+
+    - debug:
+        var: server_logs.stdout_lines
+      when: ping_tun.rc != 0

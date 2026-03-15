@@ -1,0 +1,34 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/22.04"
+  config.ssh.host = "127.0.0.1"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+    vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+  end
+
+  config.vm.define "server" do |server|
+    server.vm.hostname = "vpn-server"
+    server.vm.network "private_network", ip: "192.168.56.10"
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.hostname = "vpn-client"
+    client.vm.network "private_network", ip: "192.168.56.20"
+  end
+
+   config.vm.provision "ansible" do |ansible|
+#     ansible.playbook = "ansible/playbook_tap.yml" 
+#    после TAP запускаем TUN
+     ansible.playbook = "ansible/playbook_tun.yml" 
+     ansible.groups = {
+       "vpn_server" => ["server"],
+       "vpn_client" => ["client"]
+     }
+	 ansible.limit = "all"
+   end
+end
