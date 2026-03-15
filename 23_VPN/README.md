@@ -30,40 +30,37 @@ _P.S, Формат сдачи ДЗ - vagrant + ansible_
 ### Схема сети
 ```mermaid
 graph TD
-    subgraph "🏠 Хост-машина (Windows/WSL2)"
-        Vagrant["📦 Vagrant Control<br/>(ansible-playbook)"]
-    end
-
-    subgraph "🌐 Виртуальная сеть VirtualBox (192.168.56.0/24)"
+    %% Определение узлов
+    Host[🏠 Хост-машина: WSL2 / Vagrant]
+    
+    subgraph LAN ["🌐 Виртуальная сеть VirtualBox (192.168.56.0/24)"]
         direction LR
-        
-        VM1["🖥️ <b>Server VM (server)</b><br/>IP: 192.168.56.10<br/>VPN Server (RAS/PKI)"]
-        
-        VM2["🖥️ <b>Client VM (client)</b><br/>IP: 192.168.56.20<br/>VPN Client"]
-
-        %% Линии управления
-        Vagrant -.->|Provision| VM1
-        Vagrant -.->|Provision| VM2
+        Server["🖥️ Server VM (192.168.56.10)"]
+        Client["🖥️ Client VM (192.168.56.20)"]
     end
 
-    subgraph "🌉 Активные VPN Туннели (внутри сети)"
+    subgraph VPN ["🌉 VPN Туннели (между ВМ)"]
         direction TB
-        
-        TAP["🔌 <b>Задание 1: TAP (L2)</b><br/>Static Key<br/>IP: 10.10.10.x"]
-        
-        TUN["🔑 <b>Задание 2: TUN (L3)</b><br/>PKI (certs) / UDP 1207<br/>IP: 10.10.20.x"]
-
-        %% Отрисовка туннелей между VM
-        VM1 <==> TAP <==> VM2
-        VM1 <==> TUN <==> VM2
+        TAP["🔌 Задание 1: TAP (L2)<br/>Static Key | 10.10.10.x"]
+        TUN["🔑 Задание 2: TUN (L3)<br/>PKI (Certs) | 10.10.20.x | Port 1207"]
     end
 
-    %% Стилизация
-    style VM1 fill:#f9f,stroke:#333,stroke-width:2px
-    style VM2 fill:#bbf,stroke:#333,stroke-width:2px
-    style Vagrant fill:#eee,stroke:#999,stroke-dasharray: 5 5
-    style TAP fill:#fff,stroke:#333
-    style TUN fill:#fff,stroke:#333,stroke-width:2px
+    %% Связи управления
+    Host -.->|ansible-playbook| Server
+    Host -.->|ansible-playbook| Client
+
+    %% Связи туннелей
+    Server === TAP === Client
+    Server === TUN === Client
+
+    %% Сброс стилей для максимальной чёткости
+    style Server fill:none,stroke:#000,stroke-width:2px
+    style Client fill:none,stroke:#000,stroke-width:2px
+    style Host fill:none,stroke:#333,stroke-dasharray: 5 5
+    style TAP fill:none,stroke:#000
+    style TUN fill:none,stroke:#000,stroke-width:2px
+    style LAN fill:none,stroke:#ccc
+    style VPN fill:none,stroke:#ccc
 
 ```
 ### Таблица интерфейсов с ip 
