@@ -56,7 +56,7 @@ _P.S, Формат сдачи ДЗ - vagrant + ansible_
 
 ------------------------------------------------------------------------------------------------------------------
 ### Конфигурационные файлы
-- [Vagrantfile](vagrant_vpn/Vagrantfi)
+- [Vagrantfile](vagrant_vpn/Vagrantfile)
 - [Ansible playbook](vagrant_vpn/ansible/playbook_tap.yml) настройка TAP режима VPN
 - [Ansible playbook](vagrant_vpn/ansible/playbook_tun.yml) настройка TUP режима VPN
 
