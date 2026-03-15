@@ -27,42 +27,6 @@ _P.S, Формат сдачи ДЗ - vagrant + ansible_
 - В качестве ОС на хостах установлена Ubuntu 22.04
 - Vagrant + Ansible запускается из WSL2 в Windows 11
 
-### Схема сети
-```mermaid
-graph TD
-    %% Определение узлов
-    Host[🏠 Хост-машина: WSL2 / Vagrant]
-    
-    subgraph LAN ["🌐 Виртуальная сеть VirtualBox (192.168.56.0/24)"]
-        direction LR
-        Server["🖥️ Server VM (192.168.56.10)"]
-        Client["🖥️ Client VM (192.168.56.20)"]
-    end
-
-    subgraph VPN ["🌉 VPN Туннели (между ВМ)"]
-        direction TB
-        TAP["🔌 Задание 1: TAP (L2)<br/>Static Key | 10.10.10.x"]
-        TUN["🔑 Задание 2: TUN (L3)<br/>PKI (Certs) | 10.10.20.x | Port 1207"]
-    end
-
-    %% Связи управления
-    Host -.->|ansible-playbook| Server
-    Host -.->|ansible-playbook| Client
-
-    %% Связи туннелей
-    Server === TAP === Client
-    Server === TUN === Client
-
-    %% Сброс стилей для максимальной чёткости
-    style Server fill:none,stroke:#000,stroke-width:2px
-    style Client fill:none,stroke:#000,stroke-width:2px
-    style Host fill:none,stroke:#333,stroke-dasharray: 5 5
-    style TAP fill:none,stroke:#000
-    style TUN fill:none,stroke:#000,stroke-width:2px
-    style LAN fill:none,stroke:#ccc
-    style VPN fill:none,stroke:#ccc
-
-```
 ### Таблица интерфейсов с ip 
 
 | Хост         | Интерфейс | Тип сети        | IP-адрес / Подсеть | Описание                          |
