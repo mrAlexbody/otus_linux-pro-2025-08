@@ -39,27 +39,26 @@
 graph TD
     %% Nodes Definition
     inetRouter["🌐 inetRouter (CentOS 8)<br/>eth8: 192.168.56.10"]
-    centralRouter["Intermediate Router<br/>📦 centralRouter (CentOS 8)<br/>eth8: 192.168.56.11<br/>eth6: 192.168.255.9/30"]
-    office1Router["Edge Router<br/>📦 office1Router (CentOS 8)<br/>eth8: 192.168.56.20<br/>eth2: 192.168.255.10/30"]
+    centralRouter["📦 centralRouter (CentOS 8)<br/>eth8: 192.168.56.11<br/>eth6: 192.168.255.9/30"]
+    office1Router["📦 office1Router (CentOS 8)<br/>eth8: 192.168.56.20<br/>eth2: 192.168.255.10/30"]
 
-    subgraph testLAN [Internal Network: testLAN]
+    subgraph testLAN ["Internal Network: testLAN"]
         direction TB
-        c1["🖥️ testClient1<br/>(CentOS 8)<br/>.56.21"]
-        s1["🗄️ testServer1<br/>(CentOS 8)<br/>.56.22"]
-        c2["🖥️ testClient2<br/>(Ubuntu)<br/>.56.31"]
-        s2["🗄️ testServer2<br/>(Ubuntu)<br/>.56.32"]
+        c1["🖥️ testClient1 (CentOS 8)<br/>.56.21"]
+        s1["🗄️ testServer1 (CentOS 8)<br/>.56.22"]
+        c2["🖥️ testClient2 (Ubuntu)<br/>.56.31"]
+        s2["🗄️ testServer2 (Ubuntu)<br/>.56.32"]
     end
 
     %% Connections
-    inetRouter ---|router-net (Ad. 2 & 3)| centralRouter
-    centralRouter ---|office1-central (192.168.255.8/30)| office1Router
+    inetRouter ---|"router-net (Ad. 2 & 3)"| centralRouter
+    centralRouter ---|"office1-central (192.168.255.8/30)"| office1Router
     
-    office1Router ---|VLAN 1 (Ad. 3,4)| v1((Empty))
-    office1Router ---|VLAN 2 (Ad. 5,6)| v2((Empty))
+    office1Router ---|"VLAN 1 (Ad. 3, 4)"| v1((Empty))
+    office1Router ---|"VLAN 2 (Ad. 5, 6)"| v2((Empty))
     
     %% Management Links
     office1Router -.-> testLAN
-
 ```
 ## Таблица IP-адресов и подключений
 
