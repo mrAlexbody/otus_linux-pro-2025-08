@@ -35,28 +35,29 @@
 ### Схема
 ```mermaid
 graph TD
-    %% Nodes Definition
-    inetRouter["🌐 inetRouter (CentOS 8)<br/>eth8: 192.168.56.10"]
-    centralRouter["📦 centralRouter (CentOS 8)<br/>eth8: 192.168.56.11<br/>eth6: 192.168.255.9/30"]
-    office1Router["📦 office1Router (CentOS 8)<br/>eth8: 192.168.56.20<br/>eth2: 192.168.255.10/30"]
 
-    subgraph testLAN ["Internal Network: testLAN"]
-        direction TB
-        c1["🖥️ testClient1 (CentOS 8)<br/>.56.21"]
-        s1["🗄️ testServer1 (CentOS 8)<br/>.56.22"]
-        c2["🖥️ testClient2 (Ubuntu)<br/>.56.31"]
-        s2["🗄️ testServer2 (Ubuntu)<br/>.56.32"]
+    inetRouter["🌐 inetRouter (CentOS 8 Stream)<br>192.168.255.1/30 (bond0)"]
+    centralRouter["📦 centralRouter (CentOS 8 Stream)<br>192.168.255.2/30 (to inetRouter)<br>192.168.255.9/30 (to office1Router)"]
+    office1Router["📦 office1Router (CentOS 8 Stream)<br>192.168.255.10/30 (to centralRouter)"]
+
+    inetRouter ---|"Bond0 (router-net)"| centralRouter
+    inetRouter ---|"Bond0 (router-net)"| centralRouter
+
+    centralRouter ---|"office1-central (192.168.255.8/30)"| office1Router
+
+    subgraph testLAN ["testLAN"]
+        subgraph vlan1 ["VLAN 1"]
+            testClient1["🖥️ testClient1 (CentOS 8 Stream)"]
+            testServer1["🗄️ testServer1 (CentOS 8 Stream)"]
+        end
+        subgraph vlan2 ["VLAN 2"]
+            testClient2["🖥️ testClient2 (Ubuntu 20.04)"]
+            testServer2["🗄️ testServer2 (Ubuntu 20.04)"]
+        end
     end
 
-    %% Connections
-    inetRouter ---|"router-net (Ad. 2 & 3)"| centralRouter
-    centralRouter ---|"office1-central (192.168.255.8/30)"| office1Router
-    
-    office1Router ---|"VLAN 1 (Ad. 3, 4)"| v1((Empty))
-    office1Router ---|"VLAN 2 (Ad. 5, 6)"| v2((Empty))
-    
-    %% Management Links
-    office1Router -.-> testLAN
+    office1Router ---|"VLAN 1 (adapters 3,4)"| vlan1
+    office1Router ---|"VLAN 2 (adapters 5,6)"| vlan2
 ```
 ## Таблица IP-адресов и подключений
 
