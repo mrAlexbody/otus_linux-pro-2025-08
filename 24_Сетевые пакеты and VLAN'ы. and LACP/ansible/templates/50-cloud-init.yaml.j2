@@ -1,0 +1,13 @@
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    {{ parent_iface }}: {}
+  vlans:
+    vlan{{ vlan_id }}:
+      id: {{ vlan_id }}
+      link: {{ parent_iface }}
+      dhcp4: no
+      addresses:
+        - {{ vlan_ip }}/24

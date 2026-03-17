@@ -1,0 +1,82 @@
+---
+- name: "Базовая настройка"
+  hosts: all
+  become: yes
+  vars:
+    ansible_python_interpreter: auto_silent
+  tasks:
+    - name: "Установка системных утилит"
+      ansible.builtin.package:
+        name:
+          - nano
+          - traceroute
+          - tcpdump
+          - net-tools
+          - mc
+        state: present
+
+- name: "Настройка Bonding на роутерах inetRouter и centralRouter"
+  hosts: inetRouter,centralRouter
+  become: yes
+  tasks:
+    - name: "Создание bond0"
+      community.general.nmcli:
+        conn_name: bond0
+        ifname: bond0
+        type: bond
+        mode: active-backup
+        mode: active-backup
+        miimon: 100
+        fail_over_mac: active
+        ip4: "{{ bond_ip }}/30"
+        state: present
+
+    - name: "Добавление eth1 в bond0"
+      community.general.nmcli:
+        conn_name: bond0-eth1
+        ifname: eth1
+        type: bond-slave
+        master: bond0
+        state: present
+
+    - name: "Добавление eth2 в bond0"
+      community.general.nmcli:
+        conn_name: bond0-eth2
+        ifname: eth2
+        type: bond-slave
+        master: bond0
+        state: present
+
+- name: "Настройка VLAN на testClient1 и testServer1"
+  hosts: testClient1,testServer1
+  become: yes
+  tasks:
+    - name: "Удалить старые VLAN-соединения"
+      community.general.nmcli:
+        conn_name: "vlan{{ vlan_id }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: "Создание VLAN-интерфейса vlan{{ vlan_id }}"
+      community.general.nmcli:
+        conn_name: "vlan{{ vlan_id }}"
+        ifname: "vlan{{ vlan_id }}"
+        type: vlan
+        vlanid: "{{ vlan_id }}"
+        vlandev: "{{ parent_iface }}"
+        ip4: "{{ vlan_ip }}/24"
+        state: present
+
+- name: "Настройка VLAN на testClient2 и testServer2"
+  hosts: testClient2,testServer2
+  become: yes
+  tasks:
+    - name: "Генерация конфигурации Netplan"
+      ansible.builtin.template:
+        src: 50-cloud-init.yaml.j2
+        dest: /etc/netplan/50-cloud-init.yaml
+      register: netplan_res
+
+    - name: "Применение конфигурации Netplan"
+      ansible.builtin.command: netplan apply
+      when: netplan_res.changed

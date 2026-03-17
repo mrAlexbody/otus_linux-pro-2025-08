@@ -1,0 +1,13 @@
+VLAN=yes
+TYPE=Vlan
+PHYSDEV={{ parent_iface }}
+VLAN_ID={{ vlan_id }}
+REORDER_HDR=yes
+GVRP=no
+MVRP=no
+BOOTPROTO=none
+IPADDR={{ vlan_ip }}
+PREFIX=24
+DEVICE={{ parent_iface }}.{{ vlan_id }}
+ONBOOT=yes
+NM_CONTROLLED=yes

@@ -1,0 +1,114 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
+Vagrant.configure("2") do |config|
+  config.ssh.host = "127.0.0.1"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+    vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    if command -v dnf &> /dev/null; then
+      dnf install -y python3
+    elif command -v apt-get &> /dev/null; then
+      apt-get update && apt-get install -y python3
+    fi
+  SHELL
+
+  MACHINES = {
+    "inetRouter" => {
+      box: "almalinux/9",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "router-net" },
+        { auto_config: false, virtualbox__intnet: "router-net" },
+        { ip: "192.168.56.10" }
+      ]
+    },
+    "centralRouter" => {
+      box: "almalinux/9",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "router-net" },
+        { auto_config: false, virtualbox__intnet: "router-net" },
+        { ip: "192.168.255.9", virtualbox__intnet: "office1-central" },
+        { ip: "192.168.56.11" }
+      ]
+    },
+    "office1Router" => {
+      box: "almalinux/9",
+      interfaces: [
+        { ip: "192.168.255.10", virtualbox__intnet: "office1-central" },
+        { auto_config: false, virtualbox__intnet: "vlan1_net" },
+        { auto_config: false, virtualbox__intnet: "vlan2_net" },
+        { ip: "192.168.56.20" }
+      ]
+    },
+    "testClient1" => {
+      box: "almalinux/9",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "vlan1_net" },
+        { ip: "192.168.56.21" }
+      ]
+    },
+    "testServer1" => {
+      box: "almalinux/9",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "vlan1_net" },
+        { ip: "192.168.56.22" }
+      ]
+    },
+    "testClient2" => {
+      box: "ubuntu/jammy64",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "vlan2_net" },
+        { ip: "192.168.56.31" }
+      ]
+    },
+    "testServer2" => {
+      box: "ubuntu/jammy64",
+      interfaces: [
+        { auto_config: false, virtualbox__intnet: "vlan2_net" },
+        { ip: "192.168.56.32" }
+      ]
+    }
+  }
+
+  MACHINES.each do |name, cfg|
+    config.vm.define name do |node|
+      node.vm.box = cfg[:box]
+      node.vm.hostname = name
+
+      cfg[:interfaces].each do |iface|
+        if iface[:ip]
+          node.vm.network "private_network",
+            ip: iface[:ip],
+            virtualbox__intnet: iface[:virtualbox__intnet]
+        else
+          node.vm.network "private_network",
+            auto_config: false,
+            virtualbox__intnet: iface[:virtualbox__intnet]
+        end
+      end
+
+      # Запуск Ansible один раз на последней машине
+      if name == "testServer2"
+        node.vm.provision "ansible" do |ansible|
+          ansible.playbook = "ansible/playbook.yml"
+          ansible.compatibility_mode = "2.0"
+          ansible.limit = "all"
+          ansible.host_vars = {
+            "inetRouter"    => { "bond_ip" => "192.168.255.1" },
+            "centralRouter" => { "bond_ip" => "192.168.255.2" },
+            "testClient1"   => { "vlan_id" => 1, "vlan_ip" => "10.10.10.254", "parent_iface" => "eth1" },
+            "testServer1"   => { "vlan_id" => 1, "vlan_ip" => "10.10.10.1",   "parent_iface" => "eth1" },
+            "testClient2"   => { "vlan_id" => 2, "vlan_ip" => "10.10.10.254", "parent_iface" => "enp0s8" },
+            "testServer2"   => { "vlan_id" => 2, "vlan_ip" => "10.10.10.1",   "parent_iface" => "enp0s8" }
+          }
+        end
+      end
+    end
+  end
+end
