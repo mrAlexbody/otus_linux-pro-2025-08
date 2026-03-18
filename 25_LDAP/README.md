@@ -32,9 +32,8 @@ graph TD
     end
 
     %% Линии связи
-    IPA <--> NIC
-    C1 <--> NIC
-    C2 <--> NIC
+    C1 <--> IPA
+    C2 <--> IPA
 
     %% Взаимодействие
     C1 -. "Auth / DNS (TCP/UDP 389, 88, 53)" .-> IPA
