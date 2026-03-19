@@ -1,0 +1,90 @@
+- name: Базовые настройки
+  hosts: all
+  become: yes
+  tasks:
+    - name: Остановка Firewalld
+      systemd:
+        name: firewalld
+        state: stopped
+        enabled: no
+      failed_when: false
+
+    - name: Настройка SELinux
+      selinux:
+        state: disabled
+
+    - name: Установка пакетов
+      dnf:
+        name: [chrony, mc, nano, python3-libselinux]
+        state: present
+
+    - name: Настройка /etc/hosts
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1   localhost localhost.localdomain
+          ::1         localhost localhost.localdomain
+          {% for host in groups['all'] %}
+          {{ hostvars[host]['ansible_all_ipv4_addresses'] | select('match', '^192\.168\.77\.') | first | default(hostvars[host]['ansible_host']) }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname_short'] }}
+          {% endfor %}
+        mode: '0644'
+
+- name: Настройка FreeIPA Server
+  hosts: ipa
+  become: yes
+  tasks:
+    - name: Установка пакетов IPA
+      dnf:
+        name: [ipa-server, ipa-server-dns]
+        state: present
+
+    - name: Установка FreeIPA (Unattended)
+      shell: >
+        ipa-server-install -U 
+        --realm={{ ipa_realm | upper }} 
+        --domain={{ ipa_domain | lower }} 
+        --ds-password={{ ds_password }} 
+        --admin-password={{ admin_password }} 
+        --hostname={{ inventory_hostname }} 
+        --ip-address={{ ipa_ip }} 
+        --setup-dns --forwarder=8.8.8.8 
+        --mkhomedir --no-ntp
+      args:
+        creates: /etc/ipa/default.conf
+      register: ipa_install
+      failed_when: 
+        - ipa_install.rc != 0 
+        - '"already configured" not in ipa_install.stderr'
+
+    - name: Проверка статуса IPA
+      command: ipactl status
+      changed_when: false
+
+- name: Настройка клиентов
+  hosts: clients
+  become: yes
+  tasks:
+    - name: Установка freeipa-client
+      dnf:
+        name: freeipa-client
+        state: present
+
+    - name: Настройка DNS на клиентах (на сервер IPA)
+      shell: "nmcli device modify eth1 ipv4.dns 192.168.77.19 && nmcli device up eth1"
+      failed_when: false
+
+    - name: Ввод в домен
+      command: >
+        ipa-client-install -U
+        --domain={{ ipa_domain | lower }}
+        --server={{ ipa_server }}
+        --principal=admin
+        --password={{ admin_password }}
+        --mkhomedir
+        --no-ntp
+      args:
+        creates: /etc/ipa/default.conf
+      register: client_join
+      until: client_join.rc == 0
+      retries: 3
+      delay: 10

@@ -1,0 +1,64 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure("2") do |config|
+  config.vm.box = "almalinux/9"
+  config.vm.box_version = "1.0.0"
+  config.ssh.host = "127.0.0.1"
+  config.vm.provider :virtualbox do |v|
+    v.memory = 4096
+    v.cpus = 2
+  end
+
+  # Базовая подготовка Python для работы Ansible
+  config.vm.provision "shell", inline: "dnf install -y python3 python3-pip epel-release"
+
+  boxes = [
+    { :name => "ipa.otus.lan", :ip => "192.168.77.19" },
+    { :name => "client1.otus.lan", :ip => "192.168.77.16" },
+    { :name => "client2.otus.lan", :ip => "192.168.77.120" }
+  ]
+
+  boxes.each do |opts|
+    config.vm.define opts[:name] do |node|
+      node.vm.hostname = opts[:name]    
+      node.vm.network "public_network", 
+        bridge: "Realtek Gaming 2.5GbE Family Controller",
+        ip: opts[:ip]
+    end
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbook.yml"
+    ansible.compatibility_mode = "2.0"
+    ansible.limit = "all"
+    ansible.groups = {
+      "ipa" => ["ipa.otus.lan"],
+      "clients" => ["client1.otus.lan", "client2.otus.lan"]
+    }
+    
+    ansible.host_vars = {
+      "ipa.otus.lan" => {
+        "ipa_domain" => "otus.lan",
+        "ipa_realm" => "OTUS.LAN",
+        "admin_password" => "otus2022",
+        "ds_password" => "otus2022",
+        "ipa_ip" => "192.168.77.100"
+      },
+      "client1.otus.lan" => {
+        "ipa_server" => "ipa.otus.lan",
+        "ipa_domain" => "otus.lan",
+        "admin_password" => "otus2022"
+      },
+      "client2.otus.lan" => {
+        "ipa_server" => "ipa.otus.lan",
+        "ipa_domain" => "otus.lan",
+        "admin_password" => "otus2022"
+      }
+    }
+    
+    ansible.extra_vars = {
+      "ansible_python_interpreter" => "/usr/bin/python3"
+    }
+  end
+end
