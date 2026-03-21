@@ -1,0 +1,112 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Установка пакетов
+      dnf:
+        name:
+          - bind
+          - bind-utils
+          - nano
+          - python3-policycoreutils
+        state: present
+
+    - name: Копирование ключа трансфера зоны
+      copy:
+        src: named.zonetransfer.key
+        dest: /etc/named.zonetransfer.key
+        owner: root
+        group: named
+        mode: 0644
+
+- hosts: ns01
+  become: true
+  tasks:
+    - name: Генерация rndc.key
+      command: rndc-confgen -a -c /etc/rndc.key -b 256
+      args:
+        creates: /etc/rndc.key
+
+    - name: Установка прав на rndc.key
+      file:
+        path: /etc/rndc.key
+        owner: root
+        group: named
+        mode: 0640
+
+    - name: Копирование master-named.conf
+      copy:
+        src: master-named.conf
+        dest: /etc/named.conf
+        owner: root
+        group: named
+        mode: 0640
+
+    - name: Копирование файлов зон
+      copy:
+        src: "{{ item }}"
+        dest: /etc/named/
+        owner: root
+        group: named
+        mode: 0660
+      with_fileglob:
+        - "named.dns.lab*"
+        - "named.newdns.lab"
+
+    #Настройка SELinux, тут
+    - name: SELinux allow BIND to write master zones
+      seboolean:
+        name: named_write_master_zones
+        persistent: yes
+        state: yes
+
+    - name: Set SELinux context for /etc/named
+      sefcontext:
+        target: '/etc/named(/.*)?'
+        setype: named_conf_t
+        state: present
+
+    - name: Apply SELinux context
+      command: restorecon -Rv /etc/named
+
+    - name: Перезапуск BIND
+      service:
+        name: named
+        state: restarted
+        enabled: yes
+
+- hosts: client1,client2
+  become: true
+  tasks:
+    - name: Настройка DNS-резолвера
+      copy:
+        content: "nameserver 192.168.56.10\n"
+        dest: /etc/resolv.conf
+
+    - name: Копирование rndc.key с сервера на хост
+      fetch:
+        src: /etc/rndc.key
+        dest: /tmp/rndc.key
+        flat: yes
+      delegate_to: ns01
+
+    - name: Размещение ключа rndc на клиентах
+      copy:
+        src: /tmp/rndc.key
+        dest: /etc/rndc.key
+        owner: root
+        group: named
+        mode: 0640
+
+    - name: Создание rndc.conf для удаленного управления
+      copy:
+        dest: /etc/rndc.conf
+        content: |
+          include "/etc/rndc.key";
+          options {
+              default-key "rndc-key";
+              default-server 192.168.56.10;
+          };
+        owner: root
+        group: root
+        mode: 0644
