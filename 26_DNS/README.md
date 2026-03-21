@@ -37,11 +37,11 @@ _P.S. настроить все без выключения selinux*_
 ### Схема
 ```mermaid
 graph TD
-    subgraph "Внешняя сеть (NAT/Host-only)"
+    subgraph External ["Внешняя сеть (NAT)"]
         Internet((Internet)) --- ns01
     end
 
-    subgraph "Внутренняя сеть (intnet: dns) 192.168.56.0/24"
+    subgraph Internal ["Внутренняя сеть 192.168.56.0/24"]
         ns01[<b>ns01</b><br/>192.168.56.10<br/>DNS Master]
         ns02[<b>ns02</b><br/>192.168.56.11<br/>DNS Slave]
         
@@ -50,18 +50,19 @@ graph TD
     end
 
     %% Логика Split-DNS
-    c1 -- Запрос --> ns01
-    ns01 -- View: client1 --> c1
-    note1[<b>Доступно для client1:</b><br/>- dns.lab (только web1)<br/>- newdns.lab (www)] 
+    c1 -- "Запрос" --> ns01
+    ns01 -- "View: client1" --> c1
+    note1["<b>Доступно для client1:</b><br/>- dns.lab (web1)<br/>- newdns.lab (www)"] 
     c1 -.-> note1
 
-    c2 -- Запрос --> ns01
-    ns01 -- View: client2 --> c2
-    note2[<b>Доступно для client2:</b><br/>- dns.lab (web1 и web2)<br/>- newdns.lab (нет доступа)]
+    c2 -- "Запрос" --> ns01
+    ns01 -- "View: client2" --> c2
+    note2["<b>Доступно для client2:</b><br/>- dns.lab (web1, web2)<br/>- newdns.lab (нет доступа)"]
     c2 -.-> note2
 
     %% Трансфер зон
-    ns01 == TSIG Transfer ==> ns02
+    ns01 == "TSIG Transfer" ==> ns02
+
 ```
 
 ### Таблица виртуальных машин 
