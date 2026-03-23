@@ -1,0 +1,79 @@
+---
+- hosts: all
+  become: yes
+  vars:   
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Check Internet Connectivity
+      uri:
+        url: http://www.google.com
+        status_code: 200
+      register: internet_status
+      ignore_errors: yes
+
+    - name: Report Internet Status
+      debug:
+        msg: >
+          {% if internet_status.status == 200 %}
+          Интернет доступен (OK). Пакеты проходят через NAT/Маскарадинг.
+          {% else %}
+          ВНИМАНИЕ: Интернет недоступен! Ошибка: {{ internet_status.msg | default('Unknown') }}
+          {% endif %}
+
+    - name: Fail if no internet
+      fail:
+        msg: "Плейбук остановлен: нет доступа в интернет."
+      when: internet_status.status != 200
+      
+    - name: Install dependencies
+      apt:
+        name: [apt-transport-https, ca-certificates, curl, software-properties-common, gnupg]
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:       
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: [docker-ce, docker-ce-cli, containerd.io]
+        state: present
+        update_cache: yes
+
+    - name: Add vagrant user to docker group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+
+    - name: Install Docker Compose
+      get_url:                
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+        force: yes 
+
+    - name: Copy project
+      copy:
+        src: project/
+        dest: /home/vagrant/project/
+
+    - name: Fix CRLF line endings for Nginx config
+      command: sed -i 's/\r$//' /home/vagrant/project/nginx-conf/nginx.conf
+      changed_when: true
+
+    - name: Run container
+      shell:
+        cmd: "/usr/local/bin/docker-compose up --build --force-recreate -d"
+        chdir: /home/vagrant/project
+      async: 300
+      poll: 5
+...

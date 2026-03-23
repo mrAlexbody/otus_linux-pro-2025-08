@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "ubuntu/22.04"
+  config.ssh.host = "127.0.0.1"
+  #config.vm.network "public_network", bridge: "Realtek Gaming 2.5GbE Family Controller"
+  #config.vm.network "forwarded_port", guest: 8081, host: 8181, auto_correct: true
+  #config.vm.network "forwarded_port", guest: 8082, host: 8182, auto_correct: true
+  #config.vm.network "forwarded_port", guest: 8083, host: 8183, auto_correct: true
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+	v.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+    v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+  
+  config.vm.provision "shell", inline: "apt-get -y update && apt-get install -y python3 python3-pip nano curl"
+  
+  config.vm.define "DynamicWeb" do |web|
+    web.vm.hostname = "web"
+	web.vm.network "public_network", ip: "192.168.77.50", bridge: "Realtek Gaming 2.5GbE Family Controller"
+    web.vm.network "forwarded_port", guest: 8081, host: 8081, auto_correct: true
+    web.vm.network "forwarded_port", guest: 8082, host: 8082, auto_correct: true
+    web.vm.network "forwarded_port", guest: 8083, host: 8083, auto_correct: true
+    web.vm.provision "ansible" do |ansible|
+      ansible.playbook = "prov.yml"
+      ansible.become = "true"
+	  ansible.verbose = "vv"  
+    end
+  end
+end
