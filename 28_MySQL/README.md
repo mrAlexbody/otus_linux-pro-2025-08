@@ -30,18 +30,17 @@
 ### Схема взаимодействия
 ```mermaid
 graph TD
-    [Пользователь] --> |SSH-подключение| Master
-    [Пользователь] --> |SSH-подключение| Slave
+    User[Пользователь] --> |SSH-подключение| Master
+    User[Пользователь] --> |SSH-подключение| Slave
 
     subgraph Database_Servers [Сервера MySQL]
         Master[Master DB<br/>192.168.77.150]
         Slave[Slave DB<br/>192.168.77.151]
     end
 
-    Master -->|Репликация (binlog)| Slave
+    Master -->|Репликация - binlog| Slave
 
     style User fill:#f0f0f0,stroke:#333,stroke-width:1px,color:#000
     style Master fill:#e0e0e0,stroke:#333,stroke-width:1px,color:#000
     style Slave fill:#e0e0e0,stroke:#333,stroke-width:1px,color:#000
-    
 ```
