@@ -30,8 +30,8 @@
 ### Схема взаимодействия
 ```mermaid
 graph TD
-    User((Пользователь)) -->|SSH-подключение| Master
-    User -->|SSH-подключение| Slave
+    [Пользователь] --> |SSH-подключение| Master
+    [Пользователь] --> |SSH-подключение| Slave
 
     subgraph Database_Servers [Сервера MySQL]
         Master[Master DB<br/>192.168.77.150]
