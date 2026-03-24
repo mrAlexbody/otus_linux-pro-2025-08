@@ -40,6 +40,8 @@ services:
     command: "gunicorn --workers=2 --bind=0.0.0.0:8000 mysite.wsgi:application"
     networks:
       - app-network
+    volumes:
+      - ./static_content:/src/static
 
   node:   
     image: node:20-alpine
@@ -62,6 +64,7 @@ services:
     volumes:
       - ./wordpress:/var/www/html
       - ./nginx-conf:/etc/nginx/conf.d
+      - ./static_content:/var/www/static
     networks:
       - app-network
     depends_on:

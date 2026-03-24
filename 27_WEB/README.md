@@ -240,6 +240,15 @@ tcp   LISTEN 0      4096               [::]:8083         [::]:*
 tcp   LISTEN 0      128                [::]:22           [::]:*
 
 ```
+```shell
+vagrant@web:~$ docker ps
+CONTAINER ID   IMAGE                         COMMAND                  CREATED             STATUS             PORTS                                                                     NAMES
+732c4d976486   nginx:stable-alpine           "/docker-entrypoint.…"   About an hour ago   Up About an hour   80/tcp, 0.0.0.0:8081-8083->8081-8083/tcp, [::]:8081-8083->8081-8083/tcp   nginx
+d2acfa079513   wordpress:php8.1-fpm-alpine   "docker-entrypoint.s…"   About an hour ago   Up About an hour   9000/tcp                                                                  wordpress
+0fe19e000106   node:20-alpine                "docker-entrypoint.s…"   About an hour ago   Up About an hour                                                                             node
+bf6375d3bbfd   project-app                   "gunicorn --workers=…"   About an hour ago   Up About an hour   8000/tcp                                                                  app
+fb7f96049b22   mysql:8.0                     "docker-entrypoint.s…"   About an hour ago   Up About an hour   3306/tcp, 33060/tcp                                                       database
+```
 ### Проверка
 > Сайт "Django"
 
@@ -252,6 +261,37 @@ tcp   LISTEN 0      128                [::]:22           [::]:*
 > Сайт "WordPress!"
 
 ![img_2.png](img_2.png)
+
+```shell
+vagrant@web:~$ curl -I http://localhost:8081
+HTTP/1.1 200 OK
+Server: nginx/1.28.2
+Date: Tue, 24 Mar 2026 09:04:03 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 10731
+Connection: keep-alive
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+vagrant@web:~$ curl http://localhost:8082
+Hello from node js server
+
+vagrant@web:~$ curl -I http://localhost:8083
+HTTP/1.1 302 Found
+Server: nginx/1.28.2
+Date: Tue, 24 Mar 2026 09:04:29 GMT
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+X-Powered-By: PHP/8.1.34
+Expires: Wed, 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache, must-revalidate, max-age=0, no-store, private
+X-Redirect-By: WordPress
+Location: http://localhost:8083/wp-admin/install.php
+
+
+```
 
 > Проверка связи с БД (для WordPress и Django)
 ```shell
@@ -317,4 +357,9 @@ Running migrations:
 
 ```
 >> Миграции прошла успешно, значит связь с БД есть =)
+> Проверка  статики CSS/JS
+
+![img_3.png](img_3.png)
+
+>> После обновления страницы , нет ошибок 404 для файлов .css или .js, значит в Nginx всё правильно работает.
 

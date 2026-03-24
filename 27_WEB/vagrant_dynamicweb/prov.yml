@@ -61,6 +61,14 @@
         mode: '0755'
         force: yes 
 
+    - name: Create symlink for docker-compose
+      file:
+        src: /usr/libexec/docker/cli-plugins/docker-compose
+        dest: /usr/local/bin/docker-compose
+        mode: '0777'        
+        state: link
+        force: yes
+
     - name: Copy project
       copy:
         src: project/
