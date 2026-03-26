@@ -1,0 +1,215 @@
+---
+- name: Configure Percona Server 8.0 GTID replication
+  hosts: all
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+    - name: Install Percona Repository
+      yum:
+        name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+        state: present
+        disable_gpg_check: yes
+
+    - name: Enable Percona Server 8.0 repository
+      command: percona-release setup ps80
+      args:
+        creates: /etc/yum.repos.d/percona-ps-80.repo
+
+    - name: Install Percona Server 8.0 and client
+      dnf:
+        name:
+          - percona-server-server
+          - percona-server-client
+          - python3-PyMySQL
+        state: present
+
+    - name: Create MySQL configuration directory
+      file:
+        path: /etc/my.cnf.d
+        state: directory
+        owner: mysql
+        group: mysql
+        mode: '0755'
+
+    - name: Deploy base configuration (master)
+      template:
+        src: templates/01-base-master.cnf.j2
+        dest: /etc/my.cnf.d/01-base.cnf
+        owner: mysql
+        group: mysql
+        mode: '0644'
+      when: inventory_hostname == 'master'
+
+    - name: Deploy base configuration (slave)
+      template:
+        src: templates/01-base-slave.cnf.j2
+        dest: /etc/my.cnf.d/01-base.cnf
+        owner: mysql
+        group: mysql
+        mode: '0644'
+      when: inventory_hostname == 'slave'
+
+    - name: Deploy static configuration files
+      copy:
+        src: "files/{{ item }}"
+        dest: "/etc/my.cnf.d/{{ item }}"
+        owner: mysql
+        group: mysql
+        mode: '0644'
+      loop:
+        - 02-max-connections.cnf
+        - 03-performance.cnf
+        - 04-slow-query.cnf
+        - 05-binlog.cnf
+
+    - name: Ensure my.cnf includes my.cnf.d
+      lineinfile:
+        path: /etc/my.cnf
+        line: "!includedir /etc/my.cnf.d"
+        state: present
+        insertafter: EOF
+
+    - name: Start MySQL service
+      systemd:
+        name: mysqld
+        state: started
+        enabled: yes
+
+    - name: Wait for MySQL to start
+      wait_for:
+        port: 3306
+        timeout: 30
+
+    - name: Check if root password already set
+      stat:
+        path: /root/.my.cnf
+      register: root_cnf
+
+    - name: Get temporary root password from log (only if password not set)
+      shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $NF}'
+      register: temp_password
+      when: not root_cnf.stat.exists
+      ignore_errors: yes
+
+    - name: Set root password using temporary password
+      shell: |
+        mysql --connect-expired-password -u root -p"{{ temp_password.stdout }}" \
+        --execute="ALTER USER USER() IDENTIFIED BY '{{ mysql_root_password }}'; FLUSH PRIVILEGES;"
+      when: not root_cnf.stat.exists and temp_password.stdout != ""
+      ignore_errors: yes
+
+    - name: Create .my.cnf for root access (new password)
+      copy:
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+      when: not root_cnf.stat.exists
+
+    - name: Verify root password (fallback if temporary password not found)
+      command: mysqladmin status
+      register: root_check
+      ignore_errors: yes
+      changed_when: false
+
+    #- name: Set root password if not set (emergency fallback)
+    #  shell: |
+    #    mysqladmin -u root password "{{ mysql_root_password }}"
+    #  when: root_check is failed
+
+    - name: Create .my.cnf for root access (fallback)
+      copy:
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+      when: root_check is failed
+
+    - name: Create replication user on master
+      community.mysql.mysql_user:
+        name: "{{ replication_user }}"
+        host: '%'
+        password: "{{ replication_password }}"
+        priv: '*.*:REPLICATION SLAVE'
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      when: inventory_hostname == 'master'
+
+    - name: Copy database dump to master
+      copy:
+        src: ../bet.dmp
+        dest: /tmp/bet.dmp
+      when: inventory_hostname == 'master'
+
+    - name: Import database dump on master
+      shell: |
+        mysql --socket=/var/lib/mysql/mysql.sock -e "CREATE DATABASE IF NOT EXISTS bet;"
+        mysql --socket=/var/lib/mysql/mysql.sock bet < /tmp/bet.dmp
+      when: inventory_hostname == 'master'
+
+    - name: Copy database dump to slave
+      copy:
+        src: ../bet.dmp
+        dest: /tmp/bet.dmp
+      when: inventory_hostname == 'slave'
+
+    - name: Import dump on slave
+      shell: |
+        mysql -e "CREATE DATABASE IF NOT EXISTS bet;"
+        mysql bet < /tmp/bet.dmp
+      when: inventory_hostname == 'slave'
+
+    # Принудительный перезапуск MySQL на слейве, чтобы GTID точно применился
+    - name: Restart MySQL on slave to apply GTID settings
+      systemd:
+        name: mysqld
+        state: restarted
+      when: inventory_hostname == 'slave'
+
+    - name: Wait for MySQL to restart on slave
+      wait_for:
+        port: 3306
+        timeout: 30
+      when: inventory_hostname == 'slave'
+
+    # Проверка, что GTID включён
+    - name: Verify GTID is enabled on slave
+      shell: |
+        mysql --socket=/var/lib/mysql/mysql.sock -N -s -e "SELECT @@global.gtid_mode"
+      register: gtid_check
+      until: gtid_check.stdout == "ON"
+      retries: 5
+      delay: 5
+      when: inventory_hostname == 'slave'
+
+    - name: Stop replica before configuration
+      community.mysql.mysql_replication:
+        mode: stopreplica
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      when: inventory_hostname == 'slave'
+      ignore_errors: yes
+
+    - name: Configure replication on slave (GTID)
+      community.mysql.mysql_replication:
+        mode: changereplication
+        master_host: "{{ master_ip }}"
+        master_user: "{{ replication_user }}"
+        master_password: "{{ replication_password }}"
+        master_auto_position: yes
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      when: inventory_hostname == 'slave'
+
+    - name: Start slave replication
+      community.mysql.mysql_replication:
+        mode: startreplica
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      when: inventory_hostname == 'slave'

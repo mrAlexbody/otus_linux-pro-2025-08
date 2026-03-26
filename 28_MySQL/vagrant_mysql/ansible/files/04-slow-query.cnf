@@ -1,0 +1,4 @@
+[mysqld]
+slow_query_log = 1
+log_output = TABLE
+long_query_time = 2

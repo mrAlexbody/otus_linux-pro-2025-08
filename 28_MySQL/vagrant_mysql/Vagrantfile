@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+Vagrant.configure("2") do |config|
+  config.ssh.host = "127.0.0.1"
+  config.vm.box = "almalinux/9"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+  end
+
+  config.vm.define "master" do |master|
+    master.vm.hostname = "master"
+    master.vm.network "public_network", ip: "192.168.77.150", bridge: "Realtek Gaming 2.5GbE Family Controller"
+  end
+
+  config.vm.define "slave" do |slave|
+    slave.vm.hostname = "slave"
+    slave.vm.network "public_network", ip: "192.168.77.151", bridge: "Realtek Gaming 2.5GbE Family Controller"
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.compatibility_mode = "2.0"
+    ansible.playbook = "ansible/provision.yml"
+    ansible.limit = "all"
+    ansible.raw_arguments = ["--timeout=30"]
+    ansible.extra_vars = {
+      mysql_root_password: "OtusLinux2026!",
+      replication_user: "repl",
+      replication_password: "OtusReplica2026!",
+      master_ip: "192.168.77.150",
+      slave_ip: "192.168.77.151"
+    }
+  end
+end
