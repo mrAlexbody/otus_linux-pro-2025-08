@@ -1,0 +1,4 @@
+---
+replicator_password: 'Otus2026!'
+master_ip: '192.168.77.150'
+slave_ip: '192.168.77.151'

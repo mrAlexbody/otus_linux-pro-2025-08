@@ -1,0 +1,71 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+MACHINES = {
+  :master => {
+    :box_name => "ubuntu/22.04",
+    :vm_name => "master",
+    :cpus => 2,
+    :memory => 2048,
+    :ip => "192.168.77.150",
+  },
+  :slave => {
+    :box_name => "ubuntu/22.04",
+    :vm_name => "slave",
+    :cpus => 2,
+    :memory => 2048,
+    :ip => "192.168.77.151",
+  },
+  :barman => {
+    :box_name => "ubuntu/22.04",
+    :vm_name => "barman",
+    :cpus => 2,
+    :memory => 2048,
+    :ip => "192.168.77.152",
+  },
+}
+
+Vagrant.configure("2") do |config|
+  config.ssh.host = "127.0.0.1"
+  config.vm.box = "ubuntu/22.04"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 1024
+    vb.cpus = 1
+	vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxconfig[:vm_name]
+      box.vm.network "public_network", ip: boxconfig[:ip], bridge: "Realtek Gaming 2.5GbE Family Controller"
+      
+      box.vm.provider "virtualbox" do |v|
+        v.memory = boxconfig[:memory]
+        v.cpus = boxconfig[:cpus]
+      end
+
+      if boxname == :barman
+        box.vm.provision "ansible" do |ansible|
+          ansible.compatibility_mode = "2.0"
+          ansible.playbook = "ansible/provision.yml"
+          ansible.inventory_path = "ansible/hosts"
+          ansible.limit = "all"
+          ansible.host_key_checking = "false"
+          ansible.raw_arguments = ["--timeout=30"]
+          ansible.extra_vars = {
+            replicator_password: "Otus2022!",
+            barman_user_password: "Otus2022!",
+            master_ip: "192.168.77.150",
+            slave_ip: "192.168.77.151",
+            barman_ip: "192.168.77.152"
+          }
+        end
+      end
+    end
+  end
+end

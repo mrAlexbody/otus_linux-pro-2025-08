@@ -1,0 +1,14 @@
+---
+- name: Install PostgreSQL and configure replication
+  hosts: master, slave
+  become: yes
+  roles:
+   - install_postgres
+   - postgres_replication
+
+- name: Configure backups (Barman)
+  hosts: all
+  become: yes
+  roles:
+   - install_barman
+

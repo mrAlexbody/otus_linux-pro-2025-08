@@ -1,0 +1,66 @@
+---
+  - name: install base tools
+    apt:
+      name:
+        - python3-pexpect
+        - python3-psycopg2
+        - acl            # <--- ДОБАВЛЕНО для исправления ошибки chmod
+      state: present
+      update_cache: true
+
+  - name: Create replicator user
+    become_user: postgres
+    postgresql_user:
+      name: replication
+      password: '{{ replicator_password }}'
+      role_attr_flags: REPLICATION 
+    ignore_errors: true
+    when: (ansible_facts['hostname'] == "master") # <--- ИСПРАВЛЕНО
+
+  - name: stop postgresql-server on slave
+    service: 
+      name: postgresql
+      state: stopped
+    when: (ansible_facts['hostname'] == "slave") # <--- ИСПРАВЛЕНО
+
+  - name: copy postgresql.conf
+    template:
+      src: postgresql.conf.j2
+      dest: /etc/postgresql/14/main/postgresql.conf
+      owner: postgres
+      group: postgres
+      mode: '0600'
+  
+  - name: copy pg_hba.conf
+    template:
+      src: pg_hba.conf.j2
+      dest: /etc/postgresql/14/main/pg_hba.conf
+      owner: postgres
+      group: postgres
+      mode: '0600'
+    
+  - name: restart postgresql-server on master
+    service: 
+      name: postgresql
+      state: restarted
+    when: (ansible_facts['hostname'] == "master") # <--- ИСПРАВЛЕНО
+
+  - name: Remove files from data catalog on slave
+    file:
+      path: /var/lib/postgresql/14/main/
+      state: absent
+    when: (ansible_facts['hostname'] == "slave") # <--- ИСПРАВЛЕНО
+
+  - name: copy files from master to slave (pg_basebackup)
+    become_user: postgres
+    expect:
+      command: 'pg_basebackup -h {{ master_ip }} -U replication -p 5432 -D /var/lib/postgresql/14/main/ -R -P'
+      responses: 
+        '.*Password*': "{{ replicator_password }}"
+    when: (ansible_facts['hostname'] == "slave") # <--- ИСПРАВЛЕНО
+
+  - name: start postgresql-server on slave
+    service: 
+      name: postgresql
+      state: started
+    when: (ansible_facts['hostname'] == "slave") # <--- ИСПРАВЛЕНО
