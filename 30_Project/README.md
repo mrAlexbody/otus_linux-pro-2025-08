@@ -22,33 +22,48 @@
 ---
 
 ### Схема сети 
+
 ```mermaid
 graph TD
-    User((🌐 Internet)) -->|DNS:53, HTTPS:443| Router{🛡️ Router/FW}
+    Client[Клиент / Admin] -->|DNS Запрос :53| VIP_LB
+    Client -->|Web Admin :80| VIP_LB
+
+    subgraph "Frontend Layer"
+        LB1[HAProxy + Keepalived\n192.168.77.10\niptables]
+        LB2[HAProxy + Keepalived\n192.168.77.11]
+        VIP_LB[Virtual IP (VIP)\n192.168.77.100]
+    end
+
+    subgraph "DNS Layer"
+        DNS_Split[Bind9 (Split-DNS)\n192.168.77.20]
+        PDNS[PowerDNS Authoritative\n192.168.77.30\nPort 5300]
+        PDNS_Admin[PowerDNS-Admin\nDocker/Flask]
+    end
+
+    subgraph "Database Cluster (HA)"
+        PG1[Patroni + Postgres + etcd\n192.168.77.31]
+        PG2[Patroni + Postgres + etcd\n192.168.77.32]
+        PG3[Patroni + Postgres + etcd\n192.168.77.33]
+    end
+
+    subgraph "Monitoring & Backup"
+        Zabbix[Zabbix Server\n192.168.77.40]
+        Backup[Barman + Config Backup\n192.168.77.50]
+    end
+
+    %% Логика связей
+    VIP_LB --> LB1
+    VIP_LB --> LB2
     
-    subgraph DMZ_Zone [Segment: 10.0.1.0/24]
-        Router --> NS[🌍 PowerDNS + Admin UI]
-    end
-
-    subgraph Internal_Zone [Segment: 10.0.2.0/24]
-        NS -->|SQL Queries| VIP[🔹 Virtual IP / Patroni]
-        VIP --> DB1[(🗄️ PG Master)]
-        VIP -.-> DB2[(🗄️ PG Replica)]
-        
-        DB1 <--> ETCD{🐝 ETCD Cluster}
-        DB2 <--> ETCD
-    end
-
-    subgraph Management_Zone [Segment: 192.168.56.0/24]
-        MGMT[📊 MGMT Server]
-        MGMT -.->|Metrics| NS & DB1 & DB2 & Router
-        MGMT -.->|Auth| LDAP[(🆔 OpenLDAP)]
-        DB2 -->|Backup Dump| MGMT
-    end
-
-    style Router fill:#f96,stroke:#333
-    style DMZ_Zone fill:#fff5e6,stroke:#f96,stroke-dasharray: 5 5
-    style Internal_Zone fill:#e6f3ff,stroke:#007bff,stroke-dasharray: 5 5
-    style MGMT fill:#f0fff0,stroke:#28a745
-
+    DNS_Split -->|Forward internal zones| PDNS
+    
+    LB1 -->|TCP 5000 (Write)| PG1
+    LB1 -->|TCP 5001 (Read)| PG2
+    LB1 -->|API Check :8008| PG1 & PG2 & PG3
+    
+    PDNS -->|Connect to DB| VIP_LB
+    
+    Zabbix -->|Monitor Agents| LB1 & DNS_Split & PDNS & PG1 & Backup
+    Backup -->|SSH/WAL| PG1
+    
 ```
