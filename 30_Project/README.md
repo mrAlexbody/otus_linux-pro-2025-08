@@ -25,13 +25,16 @@
 
 ```mermaid
 graph TD
-    Client["Клиент / Admin"] -->|DNS Запрос :53| VIP_LB
+    %% Определение узлов
+    Client["Клиент / Admin"]
+    VIP_LB["Virtual IP (VIP)<br/>192.168.77.100"]
+    
+    Client -->|DNS Запрос :53| VIP_LB
     Client -->|Web Admin :80| VIP_LB
 
     subgraph Frontend_Layer ["Frontend Layer"]
-        LB1["HAProxy + Keepalived<br/>192.168.77.10<br/>iptables"]
+        LB1["HAProxy + Keepalived<br/>192.168.77.10"]
         LB2["HAProxy + Keepalived<br/>192.168.77.11"]
-        VIP_LB["Virtual IP (VIP)<br/>192.168.77.100"]
     end
 
     subgraph DNS_Layer ["DNS Layer"]
@@ -41,33 +44,37 @@ graph TD
     end
 
     subgraph DB_Cluster ["Database Cluster (HA)"]
-        PG1["Patroni + Postgres + etcd<br/>192.168.77.31"]
-        PG2["Patroni + Postgres + etcd<br/>192.168.77.32"]
-        PG3["Patroni + Postgres + etcd<br/>192.168.77.33"]
+        PG1["Patroni + PG 1 (Leader)<br/>192.168.77.31"]
+        PG2["Patroni + PG 2 (Replica)<br/>192.168.77.32"]
+        PG3["Patroni + PG 3 (Replica)<br/>192.168.77.33"]
     end
 
     subgraph Monitoring_Backup ["Monitoring & Backup"]
         Zabbix["Zabbix Server<br/>192.168.77.40"]
-        Backup["Barman + Config Backup<br/>192.168.77.50"]
+        Backup["Barman Server<br/>192.168.77.50"]
     end
 
     %% Логика связей
-    DNS_Split -->|Forward internal zones| PDNS
+    VIP_LB --> LB1
+    VIP_LB --> LB2
     
-    LB1 -->|TCP 5000 (Write)| PG1
-    LB1 -->|TCP 5001 (Read)| PG2
-    LB1 & LB2 -->|API Check :8008| PG1
-    LB1 & LB2 -->|API Check :8008| PG2
-    LB1 & LB2 -->|API Check :8008| PG3
+    DNS_Split -->|Forward internal| PDNS
     
+    LB1 -->|TCP 5000 Write| PG1
+    LB1 -->|TCP 5001 Read| PG2
+    
+    LB1 -->|API Check 8008| PG1
+    LB1 -->|API Check 8008| PG2
+    LB1 -->|API Check 8008| PG3
+
     PDNS -->|Connect to DB| VIP_LB
     
-    Zabbix -->|Monitor Agents| LB1
-    Zabbix -->|Monitor Agents| DNS_Split
-    Zabbix -->|Monitor Agents| PDNS
-    Zabbix -->|Monitor Agents| PG1
-    Zabbix -->|Monitor Agents| Backup
+    Zabbix --> LB1
+    Zabbix --> DNS_Split
+    Zabbix --> PDNS
+    Zabbix --> PG1
     
     Backup -->|SSH/WAL| PG1
+
 
 ```
