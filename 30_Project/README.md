@@ -94,60 +94,56 @@ graph TD
     Client -->|DNS-запросы :53| VIP_LB
     Client -->|Web Admin HTTPS :443| VIP_LB
 
-    subgraph Frontend_Layer ["Балансировщики (HAProxy + Keepalived)"]
+    subgraph Frontend_Layer ["Балансировщики (Keepalived)"]
         LB1["lb1 (Master)<br/>192.168.77.11"]
         LB2["lb2 (Backup)<br/>192.168.77.12"]
     end
 
-    subgraph DNS_Layer ["DNS-серверы"]
-        SplitDNS["split-dns (Bind9)<br/>192.168.77.40<br/>Резолвинг внутренних зон"]
-        PDNS1["pdns1<br/>192.168.77.31<br/>PowerDNS Authoritative + API :8081"]
-        PDNS2["pdns2<br/>192.168.77.32<br/>PowerDNS Authoritative + API :8081"]
-        PDNS_Admin["PowerDNS-Admin<br/>(Flask + Gunicorn)<br/>:9191 на pdns1/pdns2"]
-    end
-
     subgraph DB_Cluster ["Кластер PostgreSQL (Patroni + etcd)"]
+        HAP["HAProxy<br/>(Database Load Balancer)"]
         PG1["db1<br/>192.168.77.21<br/>Реплика (standby)"]
         PG2["db2<br/>192.168.77.22<br/>Реплика (standby)"]
         PG3["db3<br/>192.168.77.23<br/>Лидер (leader)"]
     end
 
-    subgraph Monitoring_Backup ["Мониторинг и бэкапы"]
-        Zabbix["mon<br/>192.168.77.50<br/>Zabbix Server + Nginx + PHP<br/>Локальная PostgreSQL"]
-        Backup["bkp<br/>192.168.77.60<br/>Barman + BorgBackup"]
+    subgraph DNS_Layer ["DNS-серверы"]
+        SplitDNS["split-dns (Bind9)<br/>192.168.77.40"]
+        PDNS1["pdns1<br/>192.168.77.31"]
+        PDNS2["pdns2<br/>192.168.77.32"]
+        PDNS_Admin["PowerDNS-Admin"]
     end
 
-    %% Связи
+    subgraph Monitoring_Backup ["Мониторинг и бэкапы"]
+        Zabbix["mon<br/>192.168.77.50"]
+        Backup["bkp<br/>192.168.77.60"]
+    end
+
+    %% Связи трафика
     VIP_LB --> LB1
     VIP_LB --> LB2
 
-    SplitDNS -->|Forward для зоны otus.local| VIP_LB
-    PDNS1 -->|DNS-запросы :53| Client
-    PDNS2 -->|DNS-запросы :53| Client
+    %% Взаимодействие с БД через HAProxy
+    LB1 -->|Запросы к БД| HAP
+    HAP -->|TCP :5000 запись| PG3
+    HAP -->|TCP :5001 чтение| PG1
+    HAP -->|TCP :5001 чтение| PG2
 
-    LB1 -->|TCP :5000 (запись)| PG3
-    LB1 -->|TCP :5001 (чтение)| PG1
-    LB1 -->|TCP :5001 (чтение)| PG2
-
+    %% Health Checks
     LB1 -->|API health check :8008| PG1
     LB1 -->|API health check :8008| PG2
     LB1 -->|API health check :8008| PG3
 
-    PDNS1 -->|Подключение к БД| VIP_LB
-    PDNS2 -->|Подключение к БД| VIP_LB
+    %% Остальные связи
+    SplitDNS -->|Forward| VIP_LB
+    PDNS1 -->|DNS-запросы :53| Client
+    PDNS2 -->|DNS-запросы :53| Client
+    
+    PDNS1 -->|БД| VIP_LB
+    PDNS2 -->|БД| VIP_LB
 
-    PDNS_Admin -->|Чтение API PowerDNS| PDNS1
-    PDNS_Admin -->|Чтение API PowerDNS| PDNS2
+    Zabbix -->|Метрики| VIP_LB
+    Backup -->|Бэкап| VIP_LB
 
-    Zabbix -->|Сбор метрик| VIP_LB
-    Zabbix -->|DNS-запросы| SplitDNS
-    Zabbix -->|Сбор метрик| PDNS1
-    Zabbix -->|Сбор метрик| PG1
-
-    Backup -->|WAL-архивация и бэкап| VIP_LB
-    Backup -->|Borg-бэкап конфигов| PDNS1
-    Backup -->|Borg-бэкап конфигов| PG1
-    Backup -->|Borg-бэкап конфигов| Zabbix
 
 ```
 ### Таблица 
