@@ -1,0 +1,4 @@
+---
+internal_network: "192.168.77.0/24"
+internal_zone: "otus.local"
+external_zone: "rawl32.ru"

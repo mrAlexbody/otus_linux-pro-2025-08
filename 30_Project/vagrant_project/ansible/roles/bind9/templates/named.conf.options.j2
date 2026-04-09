@@ -1,0 +1,13 @@
+options {
+    directory "/var/cache/bind";
+    recursion yes;
+    allow-query { any; };
+    allow-recursion { {{ internal_network }}; 127.0.0.0/8; };
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+    };
+    dnssec-validation auto;
+    listen-on { any; };
+    listen-on-v6 { none; };
+};

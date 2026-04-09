@@ -1,0 +1,55 @@
+# {{ ansible_managed }}
+scope: {{ patroni_scope }}
+namespace: {{ patroni_namespace }}
+name: {{ inventory_hostname }}
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: {{ ansible_host }}:8008
+
+etcd:
+  hosts:
+{% for host in groups['db'] %}
+    - {{ hostvars[host]['ansible_host'] }}:2379
+{% endfor %}
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      pg_hba:
+        - "local all postgres trust"
+        - "local all all trust"
+        - "host replication standby 0.0.0.0/0 md5"
+        - "host replication barman 0.0.0.0/0 md5"
+        - "host all all 0.0.0.0/0 md5"
+        - "host all all 127.0.0.1/32 md5"
+        - "host all all ::1/128 md5"
+
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: {{ ansible_host }}:5432
+  data_dir: /var/lib/postgresql/{{ postgresql_version }}/main
+  bin_dir: /usr/lib/postgresql/{{ postgresql_version }}/bin
+  pgpass: /tmp/pgpass
+  authentication:
+    replication:
+      username: standby
+      password: {{ vault_patroni_replication_password }}
+    superuser:
+      username: postgres
+      password: {{ vault_postgres_superuser_password }}
+  parameters:
+    unix_socket_directories: '/var/run/postgresql'
+    listen_addresses: '*'
+    max_wal_senders: 10
+    max_replication_slots: 10
+    wal_level: replica

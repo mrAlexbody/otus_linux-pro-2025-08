@@ -1,0 +1,12 @@
+---
+barman_user: barman
+barman_home: /var/lib/barman
+barman_log_dir: /var/log/barman
+barman_compression: gzip
+barman_retention_policy: "REDUNDANCY 3"
+barman_immediate_checkpoint: true
+barman_last_backup_maximum_age: "4 DAYS"
+barman_minimum_redundancy: 1
+barman_db_password: "{{ vault_barman_password }}"
+cluster_vip: "192.168.77.100"
+postgresql_version: 14

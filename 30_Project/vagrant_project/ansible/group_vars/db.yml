@@ -1,0 +1,47 @@
+---
+postgresql_version: 14
+patroni_scope: "postgres_cluster"
+patroni_namespace: "/patroni"
+patroni_replication_password: "{{ vault_patroni_replication_password }}"
+
+patroni_bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      parameters:
+        wal_level: replica
+        max_wal_senders: 10
+        max_replication_slots: 10
+        hot_standby: on
+        wal_log_hints: on
+      pg_hba:
+        - "host replication standby 0.0.0.0/0 md5"
+        - "host all all 0.0.0.0/0 md5"
+        - "host all all 127.0.0.1/32 md5"
+
+postgres_databases:
+  - name: powerdns
+    owner: powerdns
+  - name: zabbix
+    owner: zabbix
+
+postgres_users:
+  - name: powerdns
+    password: "{{ vault_powerdns_db_password }}"
+    databases:
+      - powerdns
+  - name: zabbix
+    password: "{{ vault_zabbix_db_password }}"
+    databases:
+      - zabbix
+  - name: streaming_barman
+    password: "{{ vault_barman_password }}"
+    replication: true
+
+etcd_initial_cluster: "{% for host in groups['db'] %}{{ host }}=http://{{ hostvars[host]['ansible_host'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+etcd_initial_cluster_state: "new"
+etcd_initial_cluster_token: "etcd-cluster-01"

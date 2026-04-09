@@ -1,0 +1,16 @@
+---
+collections:
+  - community.postgresql
+  - community.general
+
+roles:
+  - name: andrewrothstein.etcd
+  - name: igor_nikiforov.etcd
+    version: v1.0.0
+  - name: claranet.patroni
+    src: https://github.com/claranet/ansible-role-patroni   
+  - name: geerlingguy.postgresql
+    version: 3.2.0
+  - name: geerlingguy.nginx
+    version: 3.2.0
+    

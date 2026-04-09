@@ -1,0 +1,108 @@
+---
+- name: Force sync system clock
+  shell: "timedatectl set-ntp no && timedatectl set-ntp yes"
+  become: yes
+  
+- name: Install PostgreSQL and Patroni dependencies
+  apt:
+    name:
+      - "postgresql-{{ postgresql_version }}"
+      - python3-pip
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+
+- name: Disable default postgresql service
+  systemd:
+    name: postgresql
+    state: stopped
+    enabled: no
+
+- name: Stop Patroni and Etcd services completely
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  ignore_errors: yes
+  loop:
+    - patroni
+    - etcd
+
+- name: Stop Patroni and Etcd services completely
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  ignore_errors: yes
+  loop:
+    - patroni
+    - etcd
+
+- name: Brutally clean Etcd data directory
+  shell: rm -rf /var/lib/etcd/*
+  ignore_errors: yes
+
+- name: Brutally clean Postgres data directory
+  shell: rm -rf /var/lib/postgresql/{{ postgresql_version }}/main/*
+  ignore_errors: yes
+
+- name: Ensure Etcd data directory has correct ownership
+  file:
+    path: /var/lib/etcd
+    state: directory
+    owner: etcd
+    group: etcd
+    mode: '0700'
+
+- name: Install Patroni via pip
+  pip:
+    name: patroni[etcd]
+    state: present
+
+- name: Create Patroni config directory
+  file:
+    path: /etc/patroni
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: Deploy Patroni configuration
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  notify: restart patroni
+
+- name: Stop default PostgreSQL service
+  systemd:
+    name: postgresql
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Deploy Patroni systemd unit
+  copy:
+    dest: /etc/systemd/system/patroni.service
+    content: |
+      [Unit]
+      Description=Run Patroni
+      After=network.target etcd.service
+      Requires=etcd.service
+      [Service]
+      Type=simple
+      User=postgres
+      Group=postgres
+      ExecStart=/usr/local/bin/patroni /etc/patroni/patroni.yml
+      KillMode=process
+      Restart=on-failure
+      RestartSec=5s
+      [Install]
+      WantedBy=multi-user.target
+  notify: restart patroni
+
+- name: Start Patroni service
+  systemd:
+    name: patroni
+    state: started
+    enabled: yes
+    daemon_reload: yes

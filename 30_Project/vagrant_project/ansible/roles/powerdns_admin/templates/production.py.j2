@@ -1,0 +1,27 @@
+import os
+import urllib.parse
+
+SESSION_COOKIE_SECURE = True
+REMOTE_ADDR_HEADER = 'X-Forwarded-For'
+PREFERRED_URL_SCHEME = 'https'
+SQLA_DB_HOST = "{{ powerdns_db_host }}"
+SQLA_DB_PORT = "{{ powerdns_db_port }}"
+SQLA_DB_USER = "{{ powerdns_db_user }}"
+SQLA_DB_PASSWORD = "{{ powerdns_db_password }}"
+SQLA_DB_NAME = "{{ powerdns_db_name }}"
+SQLALCHEMY_DATABASE_URI = 'postgresql://{{ powerdns_db_user }}:{{ powerdns_db_password }}@{{ powerdns_db_host }}:{{ powerdns_db_port }}/{{ powerdns_db_name }}'
+
+FILESYSTEM_SESSIONS_ENABLED = True
+SALT = "{{ pdns_admin_salt }}"
+SECRET_KEY = "{{ pdns_admin_secret_key }}"
+
+SAML_ENABLED = False
+
+CAPTCHA_CONFIG = {
+    'CAPTCHA_ENABLED': False
+}
+
+PDNS_API_URL = "http://127.0.0.1:8081"
+PDNS_API_KEY = "{{ powerdns_api_key }}"
+PDNS_VERSION = "{{ pdns_version }}"
+

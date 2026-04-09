@@ -1,0 +1,52 @@
+---
+- name: Remove leftover systemd unit from previous roles
+  file:
+    path: /etc/systemd/system/etcd.service
+    state: absent
+
+- name: Reload systemd to pick up standard unit
+  systemd:
+    daemon_reload: yes
+
+- name: Install etcd server and client
+  apt:
+    name:
+      - etcd-server
+      - etcd-client
+    state: present
+
+- name: Stop etcd (to prevent auto-start pollution)
+  systemd:
+    name: etcd
+    state: stopped
+  register: etcd_stopped
+
+- name: Remove existing etcd data directory
+  file:
+    path: "{{ etcd_data_dir }}"
+    state: absent
+  when: etcd_stopped is defined
+
+- name: Recreate etcd data directory
+  file:
+    path: "{{ etcd_data_dir }}"
+    state: directory
+    owner: etcd
+    group: etcd
+    mode: '0700'
+
+- name: Deploy etcd configuration file
+  template:
+    src: etcd.conf.j2
+    dest: /etc/default/etcd
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart etcd
+
+- name: Enable and start etcd
+  systemd:
+    name: etcd
+    enabled: yes
+    state: started
+    daemon_reload: yes

@@ -1,0 +1,82 @@
+---
+- name: Completely remove AppArmor to prevent PID permission issues
+  apt:
+    name: apparmor
+    state: absent
+    purge: yes
+
+- name: Force sync system clock
+  shell: "timedatectl set-ntp no && timedatectl set-ntp yes"
+  become: yes
+  
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install basic packages
+  apt:
+    name:
+      - acl
+      - curl
+      - wget
+      - vim
+      - htop
+      - net-tools
+      - rsync
+      - chrony
+      - iptables-persistent
+      - jq
+      - nano
+      - postgresql-client
+    state: present
+
+- name: Configure /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure chrony
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart chrony
+
+- name: Fix incorrect NAT routes for bridged network (VirtualBox bug)
+  shell: |
+    ip route del 192.168.77.0/24 via 10.0.2.2 dev enp0s3 2>/dev/null || true
+    ip route del 192.168.77.31 via 10.0.2.2 dev enp0s3 2>/dev/null || true
+    ip route del 192.168.77.1 via 10.0.2.2 dev enp0s3 2>/dev/null || true
+  ignore_errors: yes
+  changed_when: false
+
+- name: Configure iptables
+  template:
+    src: iptables.rules.j2
+    dest: /etc/iptables/rules.v4
+    newline_sequence: "\n"
+  notify: apply iptables
+
+- name: Allow binding to virtual IP
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    sysctl_set: yes
+    state: present
+
+- name: Configure resolv.conf to use PowerDNS
+  copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 192.168.77.31
+      nameserver 192.168.77.32
+      nameserver 192.168.77.1 
+      search otus.local
+    mode: '0644'
+  when: ansible_host != 'split-dns'

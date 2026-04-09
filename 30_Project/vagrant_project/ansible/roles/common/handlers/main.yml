@@ -1,0 +1,9 @@
+---
+- name: restart chrony
+  systemd:
+    name: chrony
+    state: restarted
+    daemon_reload: yes
+
+- name: apply iptables
+  ansible.builtin.shell: iptables-restore < /etc/iptables/rules.v4

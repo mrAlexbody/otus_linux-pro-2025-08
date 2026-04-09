@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+[postgres_cluster]
+description = "Patroni PostgreSQL Cluster via VIP"
+# Используем пользователя barman везде
+conninfo = host={{ cluster_vip }} port=5000 user={{ barman_user }} dbname=postgres
+streaming_conninfo = host={{ cluster_vip }} port=5000 user={{ barman_user }}
+backup_method = postgres
+streaming_archiver = on
+# Автоматическое создание слота
+create_slot = auto
+slot_name = barman_slot
+path_prefix = /usr/lib/postgresql/{{ postgresql_version }}/bin
+retention_policy = REDUNDANCY 2
+archiver = off

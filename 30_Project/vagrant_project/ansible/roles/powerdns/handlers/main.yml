@@ -1,0 +1,10 @@
+---
+- name: restart pdns
+  systemd:
+    name: pdns
+    state: restarted
+
+- name: start pdns
+  systemd:
+    name: pdns
+    state: started

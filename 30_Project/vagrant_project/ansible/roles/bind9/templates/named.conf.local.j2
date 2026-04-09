@@ -1,0 +1,17 @@
+zone "{{ external_zone }}" {
+    type forward;
+    forward only;
+    forwarders {
+        {{ hostvars['pdns1']['ansible_host'] }};
+        {{ hostvars['pdns2']['ansible_host'] }};
+    };
+};
+
+zone "{{ internal_zone }}" {
+    type forward;
+    forward only;
+    forwarders {
+        {{ hostvars['pdns1']['ansible_host'] }};
+        {{ hostvars['pdns2']['ansible_host'] }};
+    };
+};

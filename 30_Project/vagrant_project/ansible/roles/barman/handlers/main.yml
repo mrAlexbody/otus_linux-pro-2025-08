@@ -1,0 +1,7 @@
+---
+- name: reload postgresql
+  become_user: postgres
+  command: /usr/lib/postgresql/{{ postgresql_version }}/bin/pg_ctl reload -D /var/lib/postgresql/{{ postgresql_version }}/main
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['db'] }}"
+  ignore_errors: yes

@@ -1,0 +1,172 @@
+---
+- name: Force sync system clock
+  shell: "timedatectl set-ntp no && timedatectl set-ntp yes"
+  become: yes
+  
+- name: Add PowerDNS GPG key
+  apt_key:
+    url: https://repo.powerdns.com/FD380FBB-pub.asc
+    state: present
+
+- name: Add PowerDNS repository
+  apt_repository:
+    repo: "deb [arch=amd64] http://repo.powerdns.com/ubuntu {{ ansible_facts['distribution_release'] }}-auth-49 main"
+    state: present
+    filename: pdns-auth
+    update_cache: yes
+
+- name: Install PowerDNS authoritative server and PostgreSQL backend
+  apt:
+    name:
+      - pdns-server
+      - pdns-backend-pgsql
+      - postgresql-client
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+
+- name: Wait for PostgreSQL (VIP) to be ready
+  wait_for:
+    host: "{{ cluster_vip }}"
+    port: 5000
+    timeout: 60
+  #delegate_to: localhost
+  become: no
+  
+- name: Ensure user {{ powerdns_db_user }} exists and has privileges
+  community.postgresql.postgresql_user:
+    name: "{{ powerdns_db_user }}"
+    password: "{{ powerdns_db_password }}"    
+    login_host: "{{ cluster_vip }}"
+    login_port: 5000
+    login_user: postgres
+    login_password: "{{ vault_postgres_superuser_password }}"  
+  run_once: true
+  delegate_to: localhost
+  become: no
+  
+- name: Ensure database {{ powerdns_db_name }} exists
+  community.postgresql.postgresql_db:
+    name: "{{ powerdns_db_name }}"
+    owner: "{{ powerdns_db_user }}"
+    login_host: "{{ cluster_vip }}"
+    login_port: 5000
+    login_user: postgres
+    login_password: "{{ vault_postgres_superuser_password }}"   
+  run_once: true
+  delegate_to: localhost
+  become: no
+
+- name: Import PowerDNS SQL schema
+  shell: |
+    psql -h {{ cluster_vip }} -p 5000 -U {{ powerdns_db_user }} -d {{ powerdns_db_name }} -f /usr/share/doc/pdns-backend-pgsql/schema.pgsql.sql
+  environment:
+    PGPASSWORD: "{{ powerdns_db_password }}"
+  run_once: true
+  become: no
+  register: schema_import
+  failed_when: 
+    - schema_import.rc != 0 
+    - "'already exists' not in schema_import.stderr"
+  
+- name: Remove all default configs from pdns.d
+  file:
+    path: "/etc/powerdns/pdns.d/{{ item }}"
+    state: absent
+  loop:
+    - bind.conf
+    - pdns.local.gpgsql.conf
+    - pdns.simplebind.conf
+  ignore_errors: yes
+
+- name: Deploy main PowerDNS configuration
+  template:
+    src: pdns.conf.j2
+    dest: /etc/powerdns/pdns.conf
+    owner: pdns
+    group: pdns
+    mode: '0640'
+  notify: restart pdns
+
+- name: Disable systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+- name: Force remove resolv.conf and set static
+  file:
+    path: /etc/resolv.conf
+    state: absent
+
+- name: Set static DNS
+  copy:
+    dest: /etc/resolv.conf
+    content: "nameserver 8.8.8.8"
+
+- name: Enable and start PowerDNS
+  systemd:
+    name: pdns
+    enabled: yes
+    state: restarted
+
+- name: Wait for PowerDNS API to be ready
+  wait_for:
+    port: "{{ pdns_api_port | default(8081) }}"
+    host: "{{ pdns_api_host | default('127.0.0.1') }}"
+    timeout: 60
+
+- name: Ensure otus.local zone exists
+  uri:
+    url: "http://127.0.0.1:8081/api/v1/servers/localhost/zones"
+    method: POST
+    body_format: json
+    body:
+      name: "otus.local."
+      kind: "Native"
+      nameservers:
+        - "ns1.otus.local."
+        - "ns2.otus.local."
+    headers:
+      X-API-Key: "{{ powerdns_api_key }}"
+    status_code: [201, 409, 422]
+  run_once: true
+
+- name: Create DNS zones in PowerDNS
+  uri:
+    url: "http://127.0.0.1:8081/api/v1/servers/localhost/zones"
+    method: POST
+    headers:
+      X-API-Key: "{{ powerdns_api_key }}"
+    body_format: json
+    body:
+      name: "{{ item.name if item.name.endswith('.') else item.name + '.' }}"
+      kind: "Native"
+      nameservers:
+        - "ns1.otus.local."
+        - "ns2.otus.local."    
+    status_code: [201, 409, 422]
+  loop: "{{ pdns_zones }}"
+  when: pdns_zones is defined
+  run_once: true
+
+- name: Create A records in otus.local zone
+  uri:
+    url: "http://127.0.0.1:8081/api/v1/servers/localhost/zones/otus.local."
+    method: PATCH
+    headers:
+      X-API-Key: "{{ powerdns_api_key }}"
+    body_format: json
+    body:
+      rrsets:
+        - name: "{{ item.name if item.name.endswith('.') else item.name + '.' }}"
+          type: "{{ item.type }}"
+          ttl: 3600
+          changetype: REPLACE
+          records:
+            - content: "{{ item.content }}"
+              disabled: false
+    status_code: [200, 204]
+  loop: "{{ pdns_records }}"
+  when: pdns_records is defined

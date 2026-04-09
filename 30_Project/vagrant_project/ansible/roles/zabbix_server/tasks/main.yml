@@ -1,0 +1,174 @@
+---
+- name: Create systemd override directory
+  file:
+    path: /etc/systemd/system/zabbix-server.service.d
+    state: directory
+    mode: '0755'
+
+- name: Force systemd to create run directory with correct permissions
+  copy:
+    dest: /etc/systemd/system/zabbix-server.service.d/override.conf
+    content: |
+      [Service]
+      RuntimeDirectory=zabbix
+      RuntimeDirectoryMode=0755
+      User=zabbix
+      Group=zabbix
+  notify: restart zabbix-server
+  
+- name: Copy Zabbix repository deb package to server
+  copy:
+    src: zabbix-release_6.4-1+ubuntu22.04_all.deb
+    dest: /tmp/zabbix-release.deb
+    mode: '0644'
+
+- name: Install Zabbix repository
+  apt:
+    deb: /tmp/zabbix-release.deb
+
+- name: Update cache
+  apt:
+    update_cache: yes
+
+- name: Install Zabbix server, frontend, PostgreSQL and SQL scripts
+  apt:
+    name:
+      - zabbix-server-pgsql
+      - zabbix-frontend-php
+      - php8.1-pgsql
+      - zabbix-nginx-conf
+      - postgresql
+      - zabbix-sql-scripts
+      - python3-psycopg2
+    state: present
+
+- name: Create Zabbix database user
+  community.postgresql.postgresql_user:
+    name: zabbix
+    password: "{{ vault_zabbix_db_password }}"
+    role_attr_flags: NOSUPERUSER,NOCREATEDB
+  become: yes
+  become_user: postgres
+
+- name: Create Zabbix database
+  community.postgresql.postgresql_db:
+    name: zabbix
+    owner: zabbix
+    encoding: UTF-8
+  become: yes
+  become_user: postgres
+
+- name: Check if Zabbix DB schema is already imported
+  become: yes
+  become_user: postgres  
+  shell: psql -U postgres -d zabbix -tAc "SELECT count(*) FROM information_schema.tables WHERE table_name = 'users';"
+  register: zabbix_table_exists
+  changed_when: false
+
+- name: Import Zabbix database schema
+  become: yes
+  become_user: zabbix  
+  shell: "zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | psql -U postgres -d zabbix"
+  when: zabbix_table_exists.stdout == "0"
+
+- name: Create Runtime Directory for PID file
+  file:
+    path: /run/zabbix
+    state: directory
+    owner: zabbix
+    group: zabbix
+    mode: '0755'
+
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  
+#- name: Generate Self-Signed SSL Certificate
+#  command: openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/zabbix.key -out /etc/ssl/certs/zabbix.crt -subj "/CN={{ ansible_host }}"
+#  args:
+#    creates: /etc/ssl/private/zabbix.key
+
+#- name: Set readable permissions on SSL private key
+#  file:
+#    path: /etc/ssl/private/zabbix.key
+#    mode: '0644'
+
+- name: Configure zabbix_server.conf
+  template:
+    src: zabbix_server.conf.j2
+    dest: /etc/zabbix/zabbix_server.conf
+    owner: zabbix 
+    group: zabbix
+    mode: '0644'
+  notify: restart zabbix-server
+
+- name: Deploy Zabbix Web Frontend Config
+  template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: www-data
+    group: www-data
+
+- name: Configure nginx for Zabbix frontend
+  template:
+    src: zabbix.nginx.j2
+    dest: /etc/zabbix/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+
+- name: Install iptables-persistent (if not already)
+  apt:
+    name: iptables-persistent
+    state: present
+
+- name: Allow localhost access to Zabbix web port (80)
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 80
+    source: "127.0.0.1"
+    jump: ACCEPT
+
+- name: Allow HAProxy servers access to Zabbix web port (80)
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 80
+    source: "{{ hostvars[item]['ansible_host'] }}"
+    jump: ACCEPT
+  loop: "{{ groups['lb'] }}"
+
+
+- name: Drop all other access to Zabbix web port (80)
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 80
+    jump: DROP
+
+- name: Save iptables rules
+  shell: iptables-save > /etc/iptables/rules.v4
+  changed_when: false
+
+- name: Override PHP settings for Zabbix
+  template:
+    src: zabbix.php.ini.j2
+    dest: /etc/php/8.1/fpm/conf.d/99-zabbix.ini
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart php8.1-fpm
+
+- name: Start services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  loop:
+    - zabbix-server
+    - nginx
+    - php8.1-fpm

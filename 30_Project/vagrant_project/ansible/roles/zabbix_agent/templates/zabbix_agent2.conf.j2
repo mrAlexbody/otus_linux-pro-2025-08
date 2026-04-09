@@ -1,0 +1,16 @@
+PidFile=/run/zabbix/zabbix_agent2.pid
+LogFile=/var/log/zabbix/zabbix_agent2.log
+LogFileSize=0
+DebugLevel=3
+
+Server={{ groups['monitoring'][0] }}
+ServerActive={{ groups['monitoring'][0] }}
+Hostname={{ inventory_hostname }}
+
+HostMetadata=linux
+
+{% if 'db' in group_names %}
+Plugins.PostgreSQL.Sessions.Default.Uri=tcp://127.0.0.1:5432
+Plugins.PostgreSQL.Sessions.Default.User=postgres
+Plugins.PostgreSQL.Sessions.Default.Password={{ vault_postgres_superuser_password }}
+{% endif %}

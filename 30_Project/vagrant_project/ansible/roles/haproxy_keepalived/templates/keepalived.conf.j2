@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+vrrp_script check_haproxy {
+    script "killall -0 haproxy"
+    interval 2
+    weight 2
+}
+
+vrrp_instance VI_1 {
+    state {{ 'MASTER' if inventory_hostname == 'lb1' else 'BACKUP' }}
+    interface enp0s8
+    virtual_router_id 51
+    priority {{ 101 if inventory_hostname == 'lb1' else 100 }}
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass {{ vault_keepalived_password | default('vrrp_pass') | truncate(8, True, '') }}
+    }
+
+    virtual_ipaddress {
+        {{ cluster_vip }} dev enp0s8
+    }
+
+    track_script {
+        check_haproxy
+    }
+}

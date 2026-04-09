@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    server_name {{ ansible_host }};
+
+    access_log /var/log/nginx/zabbix_access.log;
+    error_log /var/log/nginx/zabbix_error.log;
+
+    root /usr/share/zabbix;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}

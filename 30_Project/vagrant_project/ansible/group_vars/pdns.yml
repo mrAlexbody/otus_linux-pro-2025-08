@@ -1,0 +1,34 @@
+---
+cluster_vip: "192.168.77.100"
+
+powerdns_api_key: "{{ vault_pdns_api_key }}"
+
+powerdns_db_name: powerdns
+powerdns_db_user: powerdns
+powerdns_db_password: "{{ vault_powerdns_db_password }}"
+powerdns_db_host: "{{ cluster_vip }}"
+powerdns_db_port: 5000
+
+pdns_api_port: 8081
+pdns_api_host: "127.0.0.1"
+pdns_api_key: "{{ vault_pdns_api_key }}"
+pdns_admin_salt: "{{ vault_pdns_admin_salt }}"
+pdns_admin_secret_key: "{{ vault_pdns_admin_secret }}"
+
+pdns_zones:
+  - name: otus.local
+    type: NATIVE
+
+pdns_records:
+  - { name: "ns1.otus.local", type: "A", content: "192.168.77.31" }
+  - { name: "ns2.otus.local", type: "A", content: "192.168.77.32" }
+  - { name: "lb.otus.local", type: "A", content: "192.168.77.100" }
+  - { name: "pdns.otus.local", type: "A", content: "192.168.77.100" }
+  - { name: "zabbix.otus.local", type: "A", content: "192.168.77.100" }
+  - { name: "mon.otus.local", type: "A", content: "192.168.77.50" }
+  - { name: "bkp.otus.local", type: "A", content: "192.168.77.60" }
+  - { name: "db1.otus.local", type: "A", content: "192.168.77.21" }
+  - { name: "db2.otus.local", type: "A", content: "192.168.77.22" }
+  - { name: "db3.otus.local", type: "A", content: "192.168.77.23" }
+  - { name: "lb1.otus.local", type: "A", content: "192.168.77.11" }
+  - { name: "lb2.otus.local", type: "A", content: "192.168.77.12" }

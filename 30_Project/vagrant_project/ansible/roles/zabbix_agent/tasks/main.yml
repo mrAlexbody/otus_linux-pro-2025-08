@@ -1,0 +1,36 @@
+---
+- name: Copy Zabbix Agent 2 and PostgreSQL plugin packages to server
+  copy:
+    src: "{{ item }}"
+    dest: /tmp/
+    mode: '0644'
+  loop:
+    - zabbix-agent2_6.4.14-1+ubuntu22.04_amd64.deb
+    - zabbix-agent2-plugin-postgresql_6.4.14-1+ubuntu22.04_amd64.deb
+
+- name: Install Zabbix Agent 2 and PostgreSQL plugin
+  apt:
+    deb: "/tmp/{{ item }}"
+  loop:
+    - zabbix-agent2_6.4.14-1+ubuntu22.04_amd64.deb
+    - zabbix-agent2-plugin-postgresql_6.4.14-1+ubuntu22.04_amd64.deb
+
+- name: Install Zabbix packages
+  apt:
+    name:
+      - zabbix-agent2
+      - zabbix-agent2-plugin-postgresql
+    state: latest
+    update_cache: yes
+
+- name: Configure zabbix_agent2.conf
+  template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+  notify: restart zabbix-agent2
+
+- name: Start and enable agent2
+  systemd:
+    name: zabbix-agent2
+    enabled: yes
+    state: started

@@ -1,0 +1,20 @@
+---
+powerdns_api_key: "{{ vault_pdns_api_key }}"
+powerdns_db_name: powerdns
+powerdns_db_user: powerdns
+powerdns_db_password: "{{ vault_powerdns_db_password }}"
+powerdns_db_host: "{{ cluster_vip }}"
+powerdns_db_port: 5000                  
+
+pdns_api_port: 8081
+pdns_api_host: "127.0.0.1"
+
+pdns_admin_salt: "{{ vault_pdns_admin_salt }}"
+pdns_admin_secret_key: "{{ vault_pdns_admin_secret }}"
+
+pdns_zones:
+  - name: "rawl32.ru"
+    type: MASTER
+  - name: "otus.local"
+    type: MASTER
+ 

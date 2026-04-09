@@ -1,0 +1,23 @@
+---
+ntp_servers:
+  - 0.ubuntu.pool.ntp.org
+  - 1.ubuntu.pool.ntp.org
+
+cluster_vip: "192.168.77.100"
+
+allowed_ports:
+  - 22
+  - 53
+  - 80
+  - 5000
+  - 5001
+  - 5432
+  - 8008
+  - 2379
+  - 2380
+  - 8081
+  - 10050
+  
+internal_zone: "otus.local"
+external_zone: "rawl32.ru"
+internal_network: "192.168.77.0/24"

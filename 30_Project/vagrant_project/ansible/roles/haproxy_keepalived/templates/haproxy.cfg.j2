@@ -1,0 +1,96 @@
+# ----- Global Settings -----
+global
+    maxconn 100
+
+defaults
+    mode                    tcp
+    log                     global
+    option                  tcplog
+    timeout connect         5s
+    timeout client          1h
+    timeout server          1h
+
+# ----- Statistics on port 1936 (Legacy) -----
+listen stats_legacy
+    bind {{ cluster_vip }}:1936 ssl crt /etc/haproxy/certs/haproxy.pem
+    stats enable
+    stats uri /
+    stats auth admin:{{ vault_haproxy_stats_password | default('password') }}
+
+# ----- PostgreSQL (TCP) -----
+
+listen postgres_write
+    bind {{ cluster_vip }}:5000
+    mode tcp
+    option httpchk GET /master
+    http-check expect status 200
+    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+    server db1 192.168.77.21:5432 check port 8008
+    server db2 192.168.77.22:5432 check port 8008
+    server db3 192.168.77.23:5432 check port 8008
+
+listen postgres_read
+    bind {{ cluster_vip }}:5001
+    mode tcp
+    option httpchk GET /replica
+    http-check expect status 200
+    server db1 192.168.77.21:5432 check port 8008
+    server db2 192.168.77.22:5432 check port 8008
+    server db3 192.168.77.23:5432 check port 8008
+
+# ----- HTTP -> HTTPS redirect (port 80) -----
+
+frontend web_http_redirect
+    bind {{ cluster_vip }}:80
+    mode http
+    redirect scheme https code 301 if !{ ssl_fc }
+    acl is_lb_stats hdr(host) -i lb.otus.local
+    use_backend stats_http if is_lb_stats
+ 
+# ----- HTTPS frontend (port 443) -----
+
+frontend web_https
+    bind {{ cluster_vip }}:443 ssl crt /etc/haproxy/certs/haproxy.pem
+    mode http
+    option forwardfor
+    http-request set-header X-Forwarded-Proto https
+
+    # ACL by hostname
+    acl is_pdns     hdr(host) -i pdns.otus.local
+    acl is_zabbix   hdr(host) -i zabbix.otus.local
+    acl is_lb_stats hdr(host) -i lb.otus.local
+    use_backend stats_http   if is_lb_stats
+    use_backend pdns_admin_http if is_pdns
+    use_backend zabbix_web_http if is_zabbix
+    default_backend default_http
+
+# ----- Backends -----
+
+backend stats_http
+    mode http
+    stats enable
+    stats uri /
+    stats auth admin:{{ vault_haproxy_stats_password | default('password') }}
+    stats refresh 10s
+
+backend pdns_admin_http
+    mode http
+    balance roundrobin
+    http-request set-header X-Forwarded-Proto https
+    cookie SERVERID insert indirect nocache
+    option httpchk GET / HTTP/1.0
+    server pdns1 192.168.77.31:80 check cookie pdns1
+    server pdns2 192.168.77.32:80 check cookie pdns2
+
+backend zabbix_web_http
+    mode http
+    balance roundrobin
+    option forwardfor
+    http-request set-header X-Forwarded-Proto https
+    http-check send meth GET uri / ver HTTP/1.1 hdr Host zabbix.otus.local
+    http-check expect status 200
+    server mon 192.168.77.50:80 check
+
+backend default_http
+    mode http
+    http-request deny deny_status 404

@@ -1,0 +1,7 @@
+---
+- name: Install PostgreSQL client packages
+  apt:
+    name:
+      - postgresql-client-common
+      - postgresql-client-14
+    state: present

@@ -1,0 +1,18 @@
+[Unit]
+Description=PowerDNS-Admin
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+RuntimeDirectory=pdnsadmin
+#Environment="FLASK_CONF=/var/www/html/pdns/powerdnsadmin/default_config.py"
+Environment="FLASK_CONF=/var/www/html/pdns/configs/production.py"
+WorkingDirectory=/var/www/html/pdns
+ExecStart=/var/www/html/pdns/flask/bin/gunicorn --pid /run/pdnsadmin/pid --bind 127.0.0.1:9191 'powerdnsadmin:create_app()'
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

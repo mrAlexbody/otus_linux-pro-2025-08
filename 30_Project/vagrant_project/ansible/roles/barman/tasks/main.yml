@@ -1,0 +1,90 @@
+---
+- name: Install Barman, BorgBackup and dependencies
+  apt:
+    name:
+      - barman
+      - barman-cli
+      - borgbackup
+      - python3-psycopg2
+      - postgresql-client
+    state: present
+    update_cache: yes
+
+- name: Create barman user
+  user:
+    name: "{{ barman_user }}"
+    system: yes
+    create_home: yes
+    home: "{{ barman_home }}"
+    shell: /bin/bash
+
+- name: Create .pgpass file for barman (connects to VIP, not direct nodes)
+  template:
+    src: pgpass.j2
+    dest: "{{ barman_home }}/.pgpass"
+    owner: "{{ barman_user }}"
+    group: "{{ barman_user }}"
+    mode: '0600'
+
+- name: Create barman replication user in PostgreSQL cluster
+  shell: |
+    psql -h {{ cluster_vip }} -p 5000 -U postgres -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ barman_user }}'" | grep -q 1 || \
+    psql -h {{ cluster_vip }} -p 5000 -U postgres -d postgres -c "CREATE USER {{ barman_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ barman_db_password }}';"  
+  become: no
+  environment:
+    PGPASSWORD: "{{ vault_postgres_superuser_password }}"
+  changed_when: false
+  # no_log: true
+
+- name: Create barman configuration directory
+  file:
+    path: /etc/barman.d
+    state: directory
+    owner: "{{ barman_user }}"
+    group: "{{ barman_user }}"
+    mode: '0750'
+
+- name: Deploy main barman.conf
+  template:
+    src: barman.conf.j2
+    dest: /etc/barman.conf
+    owner: "{{ barman_user }}"
+    group: "{{ barman_user }}"
+    mode: '0644'
+
+- name: Deploy cluster backup configuration (via VIP)
+  template:
+    src: server.conf.j2
+    dest: "/etc/barman.d/postgres_cluster.conf"
+    owner: "{{ barman_user }}"
+    group: "{{ barman_user }}"
+    mode: '0644'
+
+- name: Create BorgBackup repository directory
+  file:
+    path: /var/backups/borg
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Initialize BorgBackup repository
+  command: borg init --encryption=none /var/backups/borg
+  args:
+    creates: /var/backups/borg/config
+
+- name: Add cron job for BorgBackup (configs backup daily at 00:30)
+  cron:
+    name: "borg backup /etc configs"
+    minute: "30"
+    hour: "0"
+    job: "borg create --stats --list /var/backups/borg::etc-{now:%Y-%m-%d_%H:%M} /etc > /var/log/borg.log 2>&1"
+    user: root
+
+- name: Add cron job for Barman backup (daily at 2 AM via VIP)
+  cron:
+    name: "barman backup postgres_cluster"
+    minute: "0"
+    hour: "2"
+    job: "/usr/bin/barman backup postgres_cluster > /var/log/barman-cron.log 2>&1"
+    user: "{{ barman_user }}"

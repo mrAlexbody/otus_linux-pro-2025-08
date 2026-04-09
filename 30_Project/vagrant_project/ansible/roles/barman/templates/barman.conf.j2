@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+[barman]
+barman_home = {{ barman_home }}
+configuration_files_directory = /etc/barman.d
+barman_user = {{ barman_user }}
+log_file = {{ barman_log_dir }}/barman.log
+compression = {{ barman_compression }}
+backup_method = postgres
+retention_policy = {{ barman_retention_policy }}
+immediate_checkpoint = {{ barman_immediate_checkpoint | lower }}
+last_backup_maximum_age = {{ barman_last_backup_maximum_age }}
+minimum_redundancy = {{ barman_minimum_redundancy }}

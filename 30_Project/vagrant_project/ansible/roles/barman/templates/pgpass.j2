@@ -1,0 +1,3 @@
+# {{ ansible_managed }}
+{{ cluster_vip }}:5000:*:{{ barman_user }}:{{ barman_db_password }}
+{{ cluster_vip }}:5000:*:postgres:{{ vault_postgres_superuser_password }}

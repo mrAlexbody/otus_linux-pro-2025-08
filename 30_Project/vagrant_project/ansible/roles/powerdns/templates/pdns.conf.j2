@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# PowerDNS backend configuration for PostgreSQL
+launch=gpgsql
+gpgsql-host={{ powerdns_db_host }}
+gpgsql-port={{ powerdns_db_port | default(5432) }}
+gpgsql-dbname={{ powerdns_db_name }}
+gpgsql-user={{ powerdns_db_user }}
+gpgsql-password={{ powerdns_db_password }}
+
+# API and webserver settings
+api=yes
+api-key={{ powerdns_api_key }}
+webserver=yes
+webserver-address=0.0.0.0
+webserver-port={{ pdns_api_port | default(8081) }}
+webserver-allow-from=127.0.0.1,192.168.77.0/24
