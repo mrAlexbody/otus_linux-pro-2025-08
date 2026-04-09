@@ -1,11 +1,75 @@
-*.img
-*.env
-*.tfvars
-*.tfstate*
-*.terraform*
-*.vscode
-*accesskey*
-*.rpm
-.git
+# Vagrant
+.vagrant/
+*.box
+
+# Ansible
+*.retry
+.vault_pass
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Linux
+.deb
+
+flask_session
+
+# gedit
+*~
+
+# eclipse
+.settings
+
+# pycharm
 .idea
-30_Установка PowerDNS
+
+# vscode
+.vscode
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# tmp files
+.~*
+
+flask
+config.py
+configs/production.py
+logfile.log
+log.txt
+pdns.db
+idp.crt
+*.bak
+db_repository/*
+tmp/*
+
+node_modules
+powerdnsadmin/static/generated
+.webassets-cache
+.venv*
+venv*
+.pytest_cache
+.DS_Store
+yarn-error.log
+
+PowerDNS-Admin
