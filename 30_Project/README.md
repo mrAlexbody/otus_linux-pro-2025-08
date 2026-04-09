@@ -319,7 +319,7 @@ pdns.otus.local.        3600    IN      A       192.168.77.100
 ### 4. Проверка доступа к Zabbix (должен вернуть 200 OK)
 ![img_2.png](img_2.png)
 
-# 5. Бэкапы Barman
+# 5. Бэкапы Barman и Borg backup
 ```shell
 $ vagrant ssh bkp -- sudo -u barman barman check postgres_cluster
 Server postgres_cluster:
@@ -347,7 +347,28 @@ Server postgres_cluster:
         archiver errors: OK
 
 ```
+```shell
+------------------------------------------------------------------------------
+Repository: /var/backups/borg
+Archive name: etc-2026-04-09_15:52
+Archive fingerprint: 989363c365888af2e5aaddef032190dbb2696bf55e8496330d5cbc791e816efd
+Time (start): Thu, 2026-04-09 15:52:55
+Time (end):   Thu, 2026-04-09 15:52:56
+Duration: 1.29 seconds
+Number of files: 568
+Utilization of max. archive size: 0%
+------------------------------------------------------------------------------
+                       Original size      Compressed size    Deduplicated size
+This archive:                1.90 MB            817.88 kB            787.88 kB
+All archives:                1.90 MB            817.26 kB            855.20 kB
 
+                       Unique chunks         Total chunks
+Chunk index:                     532                  562
+------------------------------------------------------------------------------
+vagrant@bkp:~$ sudo borg list /var/backups/borg
+etc-2026-04-09_15:52                 Thu, 2026-04-09 15:52:55 [989363c365888af2e5aaddef032190dbb2696bf55e8496330d5cbc791e816efd]
+
+```
 
 
 
